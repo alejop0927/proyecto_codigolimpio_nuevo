@@ -2,37 +2,26 @@
 ## Nota importante
 
 ### Pruebas
-Para ejecutar las pruebas, debes estar dentro de la carpeta
-```sh
- `\proyecto-codigo-limpio\proyecto_terminal\tests>`
-
- ```
- 
-  y ejecutar el siguiente comando:
+Para ejecutar las pruebas, debes estar en la carpeta del proyecto y ejecutar el siguiente comando:
 
 ```sh
-pytest
+pytest test
 ```
 
 Esto verificará que corren correctamente las 54 pruebas.
 
-## Ejecución del proyecto
-Para correr el proyecto en la terminal, es necesario contar con el script de la base de datos, el cual se encuentra en la carpeta modelo dentro de proyecto_terminal.
+
 
 # Pasos para ejecutar el menú del proyecto:
-Ubícate en la carpeta proyecto_terminal.
+Ubícate en la carpeta del proyecto.
 
-Establece la variable de entorno PYTHONPATH con el siguiente comando (ajustando la ruta según donde tengas el proyecto guardado):
-
-```sh
-$env:PYTHONPATH = "C:\Users\name_propietario\proyecto-codigo-limpio\proyecto_terminal"
-```
-
-Ejecuta el siguiente comando para iniciar el menú:
+desde alli vas a ejecutar el siguiente comando en la terminal:
 
 ```sh
-python src/menu.py
+python -m src.menu
 ```
+
+
 
 Si todo está configurado correctamente, el programa se ejecutará sin problemas. 🚀
 
