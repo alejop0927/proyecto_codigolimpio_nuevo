@@ -18,7 +18,7 @@ Ubícate en la carpeta del proyecto.
 desde alli vas a ejecutar el siguiente comando en la terminal:
 
 ```sh
-python -m src.menu
+python -m src.view.menu
 ```
 
 

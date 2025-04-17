@@ -1,99 +1,92 @@
 import pytest
-from src.model.login import Inicio_sesion
-from src.model.db_global import db
+from src.controller.sistema import Sistema
 from unittest.mock import patch
 
-
+# Fixture para limpiar la base de datos antes de cada prueba
 @pytest.fixture(autouse=True)
 def limpiar_base_datos():
-    db.usuarios.clear()
-    db.usuario_actual = None
-    db.usuarios["usuario@example.com"] = {
+    sistema = Sistema()
+    sistema.usuarios.clear()
+    sistema.usuario_actual = None
+    sistema.usuarios["usuario@example.com"] = {
         "Nombre": "Juan",
         "Apellido": "Prueba",
         "Correo": "usuario@example.com",
-        "Contraseña": "123456"
+        "Contraseña": "123456",
+        "Activo": True
     }
+    return sistema
 
-
-def test_iniciar_sesion_correctamente():
+def test_iniciar_sesion_correctamente(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["usuario@example.com", "123456"]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Bienvenido Juan"
-        assert db.usuario_actual == "usuario@example.com"
+        assert sistema.usuario_actual == "usuario@example.com"
 
-
-def test_iniciar_sesion_mayusculas():
+def test_iniciar_sesion_mayusculas(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["USUARIO@EXAMPLE.COM", "123456"]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Bienvenido Juan"
-        assert db.usuario_actual == "usuario@example.com"
+        assert sistema.usuario_actual == "usuario@example.com"
 
-
-def test_iniciar_sesion_despues_de_cerrar_sesion():
-    db.usuario_actual = None
+def test_iniciar_sesion_despues_de_cerrar_sesion(limpiar_base_datos):
+    sistema = limpiar_base_datos
+    sistema.usuario_actual = None
     with patch('builtins.input', side_effect=["usuario@example.com", "123456"]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Bienvenido Juan"
-        assert db.usuario_actual == "usuario@example.com"
+        assert sistema.usuario_actual == "usuario@example.com"
 
-
-def test_iniciar_sesion_contrasena_larga():
+def test_iniciar_sesion_contrasena_larga(limpiar_base_datos):
+    sistema = limpiar_base_datos
     contrasena_larga = "A" * 128
-    db.usuarios["usuario@example.com"]["Contraseña"] = contrasena_larga
+    sistema.usuarios["usuario@example.com"]["Contraseña"] = contrasena_larga
     with patch('builtins.input', side_effect=["usuario@example.com", contrasena_larga]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Bienvenido Juan"
-        assert db.usuario_actual == "usuario@example.com"
+        assert sistema.usuario_actual == "usuario@example.com"
 
-
-def test_iniciar_sesion_correo_largo():
+def test_iniciar_sesion_correo_largo(limpiar_base_datos):
+    sistema = limpiar_base_datos
     correo_largo = "a" * 64 + "@" + "b" * 185 + ".com"  
-
-    db.usuarios[correo_largo] = {
+    sistema.usuarios[correo_largo] = {
         "Nombre": "Juan",
         "Apellido": "Prueba",
         "Correo": correo_largo,
-        "Contraseña": "123456"
+        "Contraseña": "123456",
+        "Activo": True
     }
     with patch('builtins.input', side_effect=[correo_largo, "123456"]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Bienvenido Juan"
-        assert db.usuario_actual == correo_largo
+        assert sistema.usuario_actual == correo_largo
 
-
-def test_iniciar_sesion_multiples_intentos():
+def test_iniciar_sesion_multiples_intentos(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["usuario@example.com", "incorrecta", "usuario@example.com", "123456"]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Error: Credenciales incorrectas"
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Bienvenido Juan"
-        assert db.usuario_actual == "usuario@example.com"
+        assert sistema.usuario_actual == "usuario@example.com"
 
-
-def test_iniciar_sesion_correo_incorrecto():
+def test_iniciar_sesion_correo_incorrecto(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["usuario@incorrecto.com", "123456"]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Error: Usuario no registrado"
 
-
-def test_iniciar_sesion_contrasena_incorrecta():
+def test_iniciar_sesion_contrasena_incorrecta(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["usuario@example.com", "incorrecta"]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Error: Credenciales incorrectas"
 
-
-def test_iniciar_sesion_usuario_inactivo():
-    db.usuarios["usuario@example.com"]["Activo"] = False
+def test_iniciar_sesion_usuario_inactivo(limpiar_base_datos):
+    sistema = limpiar_base_datos
+    sistema.usuarios["usuario@example.com"]["Activo"] = False
     with patch('builtins.input', side_effect=["usuario@example.com", "123456"]):
-        inicio_sesion = Inicio_sesion()
-        resultado = inicio_sesion.iniciar_sesion()
+        resultado = sistema.iniciar_sesion()
         assert resultado == "Error: Usuario inactivo"

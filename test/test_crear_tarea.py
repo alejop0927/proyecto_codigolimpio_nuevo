@@ -1,94 +1,81 @@
 import pytest
-from src.model.tarea import Crear
-from src.model.db_global import db
+from src.controller.sistema import Sistema
+from src.model.tarea import Tarea
 from unittest.mock import patch
-from datetime import datetime
-
 
 @pytest.fixture(autouse=True)
 def limpiar_base_datos():
-    db.usuarios.clear()
-    db.usuarios_tareas.clear()
-    db.usuario_actual = "usuario1"
-    db.usuarios["usuario1"] = {
+    sistema = Sistema()
+    sistema.usuarios.clear()
+    sistema.usuarios_tareas.clear()
+    sistema.usuario_actual = "usuario1"
+    sistema.usuarios["usuario1"] = {
         "Nombre": "Juan",
         "Apellido": "Prueba",
         "Correo": "usuario1",
         "Contraseña": "123"
     }
+    return sistema
 
-
-def crear_tareas(nombre, texto, categoria, estado):
-    tarea = Crear(nombre, texto, "", categoria, estado)
-    return tarea.crear_tareas()
-
-
-def test_crear_tareas_valida_con_categoria():
+def test_crear_tareas_valida_con_categoria(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Comprar leche", "Comprar leche", "Compras", "Por hacer"]):
-        tarea = Crear("Comprar leche", "Comprar leche", datetime.now(), "Compras", "Por hacer")
-        tarea.crear_tareas()
-        assert len(db.usuarios_tareas["usuario1"]) == 1
-        assert db.usuarios_tareas["usuario1"][0]["nombre"] == "Comprar leche"
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        assert len(sistema.usuarios_tareas["usuario1"]) == 1
+        assert sistema.usuarios_tareas["usuario1"][0]["nombre"] == "Comprar leche"
 
-
-def test_crear_tareas_con_estado_por_hacer():
+def test_crear_tareas_con_estado_por_hacer(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Ir al gimnasio", "Ir al gimnasio", "Salud", "Por hacer"]):
-        tarea = Crear("Ir al gimnasio", "Ir al gimnasio", datetime.now(), "Salud", "Por hacer")
-        tarea.crear_tareas()
-        assert len(db.usuarios_tareas["usuario1"]) == 1
-        assert db.usuarios_tareas["usuario1"][0]["nombre"] == "Ir al gimnasio"
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        assert len(sistema.usuarios_tareas["usuario1"]) == 1
+        assert sistema.usuarios_tareas["usuario1"][0]["estado"] == "Por hacer"
 
-
-def test_crear_tareas_usuario_registrado():
+def test_crear_tareas_usuario_registrado(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Leer libro", "Leer libro", "Lectura", "Por hacer"]):
-        tarea = Crear("Leer libro", "Leer libro", datetime.now(), "Lectura", "Por hacer")
-        tarea.crear_tareas()
-        assert len(db.usuarios_tareas["usuario1"]) == 1
-        assert db.usuarios_tareas["usuario1"][0]["nombre"] == "Leer libro"
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        assert len(sistema.usuarios_tareas["usuario1"]) == 1
 
-
-def test_crear_tareas_texto_largo():
+def test_crear_tareas_texto_largo(limpiar_base_datos):
+    sistema = limpiar_base_datos
     texto_largo = "A" * 255
     with patch('builtins.input', side_effect=["Tarea larga", texto_largo, "Trabajo", "Por hacer"]):
-        tarea = Crear("Tarea larga", texto_largo, datetime.now(), "Trabajo", "Por hacer")
-        tarea.crear_tareas()
-        assert len(db.usuarios_tareas["usuario1"]) == 1
-        assert db.usuarios_tareas["usuario1"][0]["texto"] == texto_largo
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        assert sistema.usuarios_tareas["usuario1"][0]["texto"] == texto_largo
 
-
-def test_crear_tareas_estado_inusual():
+def test_crear_tareas_estado_inusual(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Estudiar", "Estudiar", "Estudio", "En pausa"]):
-        tarea = Crear("Estudiar", "Estudiar", datetime.now(), "Estudio", "En pausa")
-        tarea.crear_tareas()
-        assert len(db.usuarios_tareas["usuario1"]) == 1
-        assert db.usuarios_tareas["usuario1"][0]["estado"] == "En pausa"
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        assert sistema.usuarios_tareas["usuario1"][0]["estado"] == "En pausa"
 
-
-def test_crear_tareas_categoria_desconocida():
+def test_crear_tareas_categoria_desconocida(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Viajar", "Viajar", "Otro", "Por hacer"]):
-        tarea = Crear("Viajar", "Viajar", datetime.now(), "Otro", "Por hacer")
-        tarea.crear_tareas()
-        assert len(db.usuarios_tareas["usuario1"]) == 1
-        assert db.usuarios_tareas["usuario1"][0]["categoría"] == "Otro"
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        assert sistema.usuarios_tareas["usuario1"][0]["categoría"] == "Otro"
 
-
-def test_error_tarea_sin_texto():
+def test_error_tarea_sin_texto(limpiar_base_datos, capfd):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Tarea sin texto", "", "Personal", "Por hacer"]):
-        tarea = Crear("Tarea sin texto", "", datetime.now(), "Personal", "Por hacer")
-        resultado = tarea.crear_tareas()
-        assert resultado == "Error: El texto no puede estar vacío"
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        out, _ = capfd.readouterr()
+        assert "Error: El texto no puede estar vacío" in out
+        assert "usuario1" not in sistema.usuarios_tareas or len(sistema.usuarios_tareas["usuario1"]) == 0
 
-
-def test_error_tarea_sin_categoria():
+def test_error_tarea_sin_categoria(limpiar_base_datos, capfd):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Hacer ejercicio", "Hacer ejercicio", "", "Por hacer"]):
-        tarea = Crear("Hacer ejercicio", "Hacer ejercicio", datetime.now(), "", "Por hacer")
-        resultado = tarea.crear_tareas()
-        assert resultado == "Error: La categoría es requerida"
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        out, _ = capfd.readouterr()
+        assert "Error: La categoría es requerida" in out
+        assert "usuario1" not in sistema.usuarios_tareas or len(sistema.usuarios_tareas["usuario1"]) == 0
 
-
-def test_error_tarea_sin_estado():
+def test_error_tarea_sin_estado(limpiar_base_datos, capfd):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Revisar correo", "Revisar correo", "Trabajo", ""]):
-        tarea = Crear("Revisar correo", "Revisar correo", datetime.now(), "Trabajo", "")
-        resultado = tarea.crear_tareas()
-        assert resultado == "Error: El estado es requerido"
-
+        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
+        out, _ = capfd.readouterr()
+        assert "Error: El estado es requerido" in out
+        assert "usuario1" not in sistema.usuarios_tareas or len(sistema.usuarios_tareas["usuario1"]) == 0

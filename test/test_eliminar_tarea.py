@@ -1,56 +1,55 @@
 import pytest
-from src.model.tarea import Eliminar
-from src.model.db_global import db
+from src.controller.sistema import Sistema
 from unittest.mock import patch
 from datetime import datetime
 
-
 @pytest.fixture(autouse=True)
 def limpiar_base_datos():
-    db.usuarios.clear()
-    db.usuarios_tareas.clear()
-    db.usuario_actual = "usuario1"
-    db.usuarios["usuario1"] = {
+    sistema = Sistema()
+    sistema.usuarios.clear()
+    sistema.usuarios_tareas.clear()
+    sistema.usuario_actual = "usuario1"
+    sistema.usuarios["usuario1"] = {
         "Nombre": "Juan",
         "Apellido": "Prueba",
         "Correo": "usuario1",
-        "Contraseña": "123"
+        "Contraseña": "123",
+        "Activo": True
     }
-    db.usuarios_tareas["usuario1"] = [{
+    sistema.usuarios_tareas["usuario1"] = [{
         "nombre": "Hacer ejercicio",
         "texto": "Hacer ejercicio",
         "fecha": "2025-04-05 19:21:11",
         "categoría": "Salud",
         "estado": "Por Hacer"
     }]
+    return sistema
 
-def test_eliminar_tarea_existente():
+def test_eliminar_tarea_existente(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Hacer ejercicio"]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Tarea eliminada."
-        assert len(db.usuarios_tareas["usuario1"]) == 0
+        assert len(sistema.usuarios_tareas["usuario1"]) == 0
 
-
-def test_eliminar_tarea_estado_completada():
-    db.usuarios_tareas["usuario1"][0]["estado"] = "Completada"
+def test_eliminar_tarea_estado_completada(limpiar_base_datos):
+    sistema = limpiar_base_datos
+    sistema.usuarios_tareas["usuario1"][0]["estado"] = "Completada"
     with patch('builtins.input', side_effect=["Hacer ejercicio"]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Tarea eliminada."
-        assert len(db.usuarios_tareas["usuario1"]) == 0
+        assert len(sistema.usuarios_tareas["usuario1"]) == 0
 
-
-def test_eliminar_tarea_estado_por_hacer():
+def test_eliminar_tarea_estado_por_hacer(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Hacer ejercicio"]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Tarea eliminada."
-        assert len(db.usuarios_tareas["usuario1"]) == 0
+        assert len(sistema.usuarios_tareas["usuario1"]) == 0
 
-
-def test_eliminar_tarea_id_limite():
-    db.usuarios_tareas["usuario1"].append({
+def test_eliminar_tarea_id_limite(limpiar_base_datos):
+    sistema = limpiar_base_datos
+    sistema.usuarios_tareas["usuario1"].append({
         "nombre": "Tarea límite",
         "texto": "Texto de la tarea límite",
         "fecha": "2025-04-05 19:21:11",
@@ -58,24 +57,22 @@ def test_eliminar_tarea_id_limite():
         "estado": "Por Hacer"
     })
     with patch('builtins.input', side_effect=["Tarea límite"]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Tarea eliminada."
-        assert len(db.usuarios_tareas["usuario1"]) == 1
+        assert len(sistema.usuarios_tareas["usuario1"]) == 1
 
-
-def test_eliminar_tarea_muchas_ediciones():
-    db.usuarios_tareas["usuario1"][0]["texto"] = "Texto editado varias veces"
+def test_eliminar_tarea_muchas_ediciones(limpiar_base_datos):
+    sistema = limpiar_base_datos
+    sistema.usuarios_tareas["usuario1"][0]["texto"] = "Texto editado varias veces"
     with patch('builtins.input', side_effect=["Hacer ejercicio"]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Tarea eliminada."
-        assert len(db.usuarios_tareas["usuario1"]) == 0
+        assert len(sistema.usuarios_tareas["usuario1"]) == 0
 
-
-def test_eliminar_tarea_usuario_muchas_tareas():
+def test_eliminar_tarea_usuario_muchas_tareas(limpiar_base_datos):
+    sistema = limpiar_base_datos
     for i in range(100):
-        db.usuarios_tareas["usuario1"].append({
+        sistema.usuarios_tareas["usuario1"].append({
             "nombre": f"Tarea {i}",
             "texto": f"Texto de la tarea {i}",
             "fecha": "2025-04-05 19:21:11",
@@ -83,35 +80,32 @@ def test_eliminar_tarea_usuario_muchas_tareas():
             "estado": "Por Hacer"
         })
     with patch('builtins.input', side_effect=["Tarea 50"]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Tarea eliminada."
-        assert len(db.usuarios_tareas["usuario1"]) == 100
+        assert len(sistema.usuarios_tareas["usuario1"]) == 100
 
-
-def test_eliminar_tarea_inexistente():
+def test_eliminar_tarea_inexistente(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=["Tarea inexistente"]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Tarea no encontrada."
 
-
-def test_eliminar_tarea_sin_permisos():
-    db.usuario_actual = "usuario2"
-    db.usuarios["usuario2"] = {
+def test_eliminar_tarea_sin_permisos(limpiar_base_datos):
+    sistema = limpiar_base_datos
+    sistema.usuario_actual = "usuario2"
+    sistema.usuarios["usuario2"] = {
         "Nombre": "Ana",
         "Apellido": "Prueba",
         "Correo": "usuario2",
-        "Contraseña": "123"
+        "Contraseña": "123",
+        "Activo": True
     }
     with patch('builtins.input', side_effect=["Hacer ejercicio"]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Tarea no encontrada."
 
-
-def test_eliminar_tarea_sin_id():
+def test_eliminar_tarea_sin_id(limpiar_base_datos):
+    sistema = limpiar_base_datos
     with patch('builtins.input', side_effect=[""]):
-        eliminar = Eliminar()
-        resultado = eliminar.eliminar_tarea()
+        resultado = sistema.eliminar_tarea()
         assert resultado == "Error: Debe proporcionar un ID"
