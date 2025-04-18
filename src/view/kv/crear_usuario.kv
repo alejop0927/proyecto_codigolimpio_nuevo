@@ -1,0 +1,31 @@
+<CrearUsuarioScreen>:
+    name: "crear_usuario"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        TextInput:
+            id: nombre_input
+            hint_text: "Nombre"
+
+        TextInput:
+            id: apellido_input
+            hint_text: "Apellido"
+
+        TextInput:
+            id: correo_input
+            hint_text: "Correo"
+
+        TextInput:
+            id: contraseña_input
+            hint_text: "Contraseña"
+            password: True
+
+        Button:
+            text: "Crear Cuenta"
+            on_press: root.crear_cuenta()
+
+        Button:
+            text: "Volver"
+            on_press: app.root.current = "inicio_sesion"

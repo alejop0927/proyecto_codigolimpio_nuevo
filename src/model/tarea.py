@@ -1,7 +1,7 @@
 from datetime import datetime
 
 class Tarea:
-    def __init__(self, usuarios_tareas, usuario_actual):
+    def __init__(self,usuarios_tareas, usuario_actual):
         correo = usuario_actual
         if correo is None:
             print("No hay ningún usuario logueado.")
@@ -39,14 +39,43 @@ class Tarea:
             "estado": estado_tarea
         }
 
-        usuarios_tareas[correo].append(tarea)  
-
+        usuarios_tareas[correo].append(tarea)
         print("Tarea creada con éxito.")
 
-        
-        
-        
+class Tarea_kv:
+    def __init__(self,nombre_tarea, texto_tarea, categoria_tarea, estado_tarea, usuarios_tareas, usuario_actual):
+        correo = usuario_actual
+        if correo is None:
+            print("No hay ningún usuario logueado.")
+            return
 
-   
+        if correo not in usuarios_tareas:
+            usuarios_tareas[correo] = []
 
+        for tarea in usuarios_tareas[correo]:
+            if tarea["nombre"] == nombre_tarea:
+                print("La tarea ya existe.")
+                return
 
+        if not texto_tarea:
+            print("Error: El texto no puede estar vacío")
+            return
+
+        if not categoria_tarea:
+            print("Error: La categoría es requerida")
+            return
+
+        if not estado_tarea:
+            print("Error: El estado es requerido")
+            return
+
+        tarea = {
+            "nombre": nombre_tarea,
+            "texto": texto_tarea,
+            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "categoría": categoria_tarea,
+            "estado": estado_tarea
+        }
+
+        usuarios_tareas[correo].append(tarea)
+        print("Tarea creada con éxito.")

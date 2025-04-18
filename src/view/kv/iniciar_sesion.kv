@@ -1,0 +1,29 @@
+<Inicio_de_sesion>:
+    name: "Iniciar_Sesion_usuaraio"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+       
+
+        TextInput:
+            id: correo_input
+            hint_text: "Correo"
+
+        TextInput:
+            id: contraseña_input
+            hint_text: "Contraseña"
+            password: True
+
+        Button:
+            text: "iniciar sesion"
+            on_press: root.Inicio_de_sesion()
+
+        Button:
+            text: "Cambiar contraseña"
+            on_press: app.root.current = "cambiar_contraseña"
+        
+        Button:
+            text: "Registrarme"
+            on_press: app.root.current = "crear_usuario"

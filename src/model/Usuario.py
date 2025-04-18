@@ -31,3 +31,37 @@ class Usuario:
         }
 
         print("Usuario creado con éxito")
+
+
+class Usuario_kv:
+    def __init__(self, nombre, apellido, correo, contraseña, usuarios):
+       
+        if correo in usuarios:
+            print("Error: Correo ya registrado")
+            return
+        
+        if not nombre or len(nombre) > 50:
+            print("Error: Nombre demasiado largo o faltante")
+            return
+        
+        if not apellido:
+            print("Error: Apellido faltante")
+            return
+        
+        if len(contraseña) > 100:
+            print("Error: Contraseña demasiado larga")
+            return
+        
+        if len(contraseña) < 8:
+            print("Error: Contraseña demasiado débil")
+            return
+
+        
+        usuarios[correo] = {
+            "Nombre": nombre,
+            "Apellido": apellido,
+            "Correo": correo,
+            "Contraseña": contraseña
+        }
+
+        print("Usuario creado con éxito")

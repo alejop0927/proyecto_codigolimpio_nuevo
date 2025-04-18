@@ -1,0 +1,33 @@
+<CambiarContraseñaScreen>:
+    name: "cambiar_contraseña"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        TextInput:
+            id: correo_input
+            hint_text: "Correo"
+
+        TextInput:
+            id: contraseña_actual_input
+            hint_text: "Contraseña Actual"
+            password: True
+
+        TextInput:
+            id: nueva_contraseña_input
+            hint_text: "Nueva Contraseña"
+            password: True
+
+        TextInput:
+            id: repetir_nueva_contraseña_input
+            hint_text: "Repetir Nueva Contraseña"
+            password: True
+
+        Button:
+            text: "Cambiar Contraseña"
+            on_press: root.cambiar_contraseña()
+        
+        Button:
+            text: "Volver"
+            on_press: app.root.current = "inicio_sesion"
