@@ -1,6 +1,15 @@
 ## PROYECTO de Aula de Código Limpio
 ## Nota importante
 
+### Prueba de interfaces
+Para ejecutar el proyecto y ver las interfaces debes de estar en la carpeta inicial de proyecto y correr el siguiente comando
+
+```sh
+python main.py
+```
+
+Esto verificará que corren correctamente las 54 pruebas.
+
 ### Pruebas
 Para ejecutar las pruebas, debes estar en la carpeta del proyecto y ejecutar el siguiente comando:
 
