@@ -1,0 +1,31 @@
+<EditarTareaScreen>:
+    name: "crear_tarea"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        TextInput:
+            id: nombre_tarea_input
+            hint_text: "Nombre tarea"
+
+        TextInput:
+            id: nuevo_texto_input
+            hint_text: "Texto de la tarea"
+
+        TextInput:
+            id: nueva_categoria_input
+            hint_text: "Categoria de la tarea"
+
+        TextInput:
+            id: nuevo_estado_input
+            hint_text: "estado de la tarea"
+            
+
+        Button:
+            text: "Editar Tarea"
+            on_press: root.editar_tarea_kv()
+
+        Button:
+            text: "Volver"
+            on_press: app.root.current = "dashboard"

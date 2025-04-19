@@ -1,0 +1,31 @@
+<DashboardScreen>:
+    name: "dashboard"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        Button:
+            text: "Crear tarea"
+            on_press: app.root.current = "crear_tarea"
+
+        Button:
+            text: "Editar tarea"
+            on_press: app.root.current = "editar_tarea"
+
+        Button:
+            text: "Eliminar tarea"
+            on_press: app.root.current = "eliminar_tarea"
+
+        Button:
+            text: "Mostrar tareas"
+            on_press: app.root.current = "mostrar_tarea"
+
+        Button:
+            text: "Cerrar sesión"
+            on_press: app.root.current = "inicio_sesion"
+        
+        Button:
+            text: "Salir"
+            on_press: app.stop()
+

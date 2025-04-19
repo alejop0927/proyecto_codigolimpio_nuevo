@@ -4,9 +4,13 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from src.model.Usuario import Usuario_kv
 from src.model.tarea import Tarea_kv
 from src.controller.sistema import Sistema_KV
-
+from kivy.uix.label import Label
+from kivy.uix.boxlayout import BoxLayout
 
 sistema = Sistema_KV()
+
+def salir_app(self):
+    App.get_running_app().stop()
 
 
 class CrearUsuarioScreen(Screen):
@@ -18,8 +22,12 @@ class CrearUsuarioScreen(Screen):
 
         
         Usuario_kv(nombre, apellido, correo, contraseña, sistema.usuarios)
+        print("Usuario creado con éxito")
+        self.manager.current = "inicio_sesion"
 
-class CrearTareacreen(Screen):
+
+
+class CrearTareaScreen(Screen):
     def crear_tarea_kv(self):
         nombre_tarea = self.ids.nombre_tarea_input.text
         texto_tarea = self.ids.texto_tarea_input.text
@@ -35,6 +43,7 @@ class CrearTareacreen(Screen):
             usuarios_tareas=sistema.usuarios_tareas,
             usuario_actual=sistema.usuario_actual
         )
+        self.manager.current = "dashboard"
 
 
 
@@ -54,6 +63,8 @@ class CambiarContraseñaScreen(Screen):
         )
 
         print(resultado)
+        if resultado == 'Contraseña actualizada con éxito':
+         self.manager.current = "inicio_sesion"
 
 
 
@@ -62,11 +73,19 @@ class Inicio_de_sesion(Screen):
         correo = self.ids.correo_input.text
         contraseña = self.ids.contraseña_input.text
 
-        resultado = sistema.iniciar_sesion(
-            correo=correo,
-            contraseña=contraseña
-        )
+        resultado = sistema.iniciar_sesion(correo, contraseña)
         print(resultado)
+
+        if resultado.startswith("Bienvenido"):
+            nombre_usuario = sistema.usuarios[sistema.usuario_actual]["Nombre"]
+            mensaje_bienvenida = f"Bienvenido {nombre_usuario}"
+            print(mensaje_bienvenida)  
+            self.manager.current = "dashboard"
+            
+    def salir_app():
+     App.get_running_app().stop()
+
+
 
 
 
@@ -85,6 +104,7 @@ class EditarTareaScreen(Screen):
         )
 
         print(resultado)
+        self.manager.current = "dashboard"
 
 class EliminarTareaScreen(Screen):
     def eliminar_tarea_kv(self):
@@ -93,23 +113,64 @@ class EliminarTareaScreen(Screen):
             nombre_tarea=nombre_tarea
         )
         print(resultado)
+        self.manager.current = "dashboard"
         
 class MostrarTareaScreen(Screen):
-    def Mostrar_tareas_usuarios_kv(self):
-        sistema.mostrar_tareas_usuario()
+    def on_enter(self, *args):
+        self.mostrar_tareas_usuario()
+
+    def mostrar_tareas_usuario(self):
+        correo = sistema.usuario_actual
+        if correo is None:
+            print("No hay usuario logueado.")
+            return
+
+        tareas = sistema.usuarios_tareas.get(correo, [])
+        if not tareas:
+            print("No tienes tareas.")
+            return
+
+        tareas_layout = self.ids.tareas_layout
+        tareas_layout.clear_widgets()
+
+        for tarea in tareas:
+            tarea_box = BoxLayout(orientation='vertical', spacing=5, size_hint_y=None)
+            tarea_box.add_widget(Label(text=f"Nombre: {tarea['nombre']}"))
+            tarea_box.add_widget(Label(text=f"Texto: {tarea['texto']}"))
+            tarea_box.add_widget(Label(text=f"Fecha: {tarea['fecha']}"))
+            tarea_box.add_widget(Label(text=f"Categoría: {tarea['categoría']}"))
+            tarea_box.add_widget(Label(text=f"Estado: {tarea['estado']}"))
+            tareas_layout.add_widget(tarea_box)
+            
+class DashboardScreen(Screen):
+    def salir_app():
+      App.get_running_app().stop()
+
 
 class MyApp(App):
     def build(self):
         Builder.load_file("src/view/kv/iniciar_sesion.kv")  
         Builder.load_file("src/view/kv/crear_usuario.kv")
         Builder.load_file("src/view/kv/cambiar_contraseña.kv")
+        Builder.load_file("src/view/kv/crear_tarea.kv")
+        Builder.load_file("src/view/kv/eliminar_tarea.kv")
+        Builder.load_file("src/view/kv/editar_tarea.kv")
+        Builder.load_file("src/view/kv/mostrar_tarea.kv")  
+        Builder.load_file("src/view/kv/dashboard.kv")
+        
         sm = ScreenManager()
-        sm.add_widget(Inicio_de_sesion(name="inicio_sesion"))
+        sm.add_widget(Inicio_de_sesion(name="inicio_sesion")) 
         sm.add_widget(CrearUsuarioScreen(name="crear_usuario"))
         sm.add_widget(CambiarContraseñaScreen(name="cambiar_contraseña"))
+        sm.add_widget(CrearTareaScreen(name="crear_tarea"))
+        sm.add_widget(EliminarTareaScreen(name="eliminar_tarea"))
         sm.add_widget(EditarTareaScreen(name="editar_tarea"))
+        sm.add_widget(MostrarTareaScreen(name="mostrar_tarea"))
+        sm.add_widget(DashboardScreen(name="dashboard"))  
+
         return sm
 
 
 if __name__ == "__main__":
     MyApp().run()
+

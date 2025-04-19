@@ -1,0 +1,31 @@
+<CrearTareaScreen>:
+    name: "crear_tarea"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        TextInput:
+            id: nombre_tarea_input
+            hint_text: "Nombre tarea"
+
+        TextInput:
+            id: texto_tarea_input
+            hint_text: "Texto de la tarea"
+
+        TextInput:
+            id: categoria_tarea_input
+            hint_text: "Categoria de la tarea"
+
+        TextInput:
+            id: estado_tarea_input
+            hint_text: "estado de la tarea"
+            
+
+        Button:
+            text: "Crear Tarea"
+            on_press: root.crear_tarea_kv()
+
+        Button:
+            text: "Volver"
+            on_press: app.root.current = "dashboard"

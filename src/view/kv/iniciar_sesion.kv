@@ -1,11 +1,9 @@
 <Inicio_de_sesion>:
-    name: "Iniciar_Sesion_usuaraio"
+    name: "inicio_sesion"  # Asegúrate de que el nombre de la pantalla sea 'inicio_sesion'
     BoxLayout:
         orientation: "vertical"
         padding: 20
         spacing: 10
-
-       
 
         TextInput:
             id: correo_input
@@ -17,8 +15,8 @@
             password: True
 
         Button:
-            text: "iniciar sesion"
-            on_press: root.Inicio_de_sesion()
+            text: "Iniciar sesión"
+            on_press: root.iniciar_sesion_kv()
 
         Button:
             text: "Cambiar contraseña"
@@ -27,3 +25,7 @@
         Button:
             text: "Registrarme"
             on_press: app.root.current = "crear_usuario"
+        
+        Button:
+            text: "Salir"
+            on_press: app.stop()

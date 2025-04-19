@@ -1,0 +1,18 @@
+<EliminarTareaScreen>:
+    name: "eliminar_tarea"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        TextInput:
+            id: nombre_tarea_input
+            hint_text: "Nombre tarea que quieres eliminar"
+    
+        Button:
+            text: "Eliminar Tarea"
+            on_press: root.eliminar_tarea_kv()
+
+        Button:
+            text: "Volver"
+            on_press: app.root.current = "dashboard"

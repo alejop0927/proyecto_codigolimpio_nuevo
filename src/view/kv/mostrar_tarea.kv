@@ -1,0 +1,25 @@
+<MostrarTareaScreen>:
+    name: "mostrar_tarea"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        Label:
+            text: "Tareas del Usuario"
+            font_size: 20
+            size_hint_y: None
+            height: 40
+
+        ScrollView:
+            GridLayout:
+                id: tareas_layout
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 10
+
+        Button:
+            text: "Volver"
+            on_press: app.root.current = "dashboard"
+
