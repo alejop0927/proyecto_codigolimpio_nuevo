@@ -1,7 +1,18 @@
 from datetime import datetime
 
 class Tarea:
-    def __init__(self,usuarios_tareas, usuario_actual):
+    """
+    Clase para crear una nueva tarea mediante la entrada de datos por consola.
+    """
+    def __init__(self, usuarios_tareas, usuario_actual):
+        """
+        Inicializa una nueva tarea y la agrega al diccionario de tareas del usuario si los datos son válidos.
+
+        Args:
+            usuarios_tareas (dict): Diccionario de tareas de los usuarios.
+            usuario_actual (str): Correo del usuario actual logueado.
+
+        """
         correo = usuario_actual
         if correo is None:
             print("No hay ningún usuario logueado.")
@@ -43,7 +54,22 @@ class Tarea:
         print("Tarea creada con éxito.")
 
 class Tarea_kv:
-    def __init__(self,nombre_tarea, texto_tarea, categoria_tarea, estado_tarea, usuarios_tareas, usuario_actual):
+    """
+    Clase para crear una nueva tarea mediante la entrada de datos desde la interfaz Kivy.
+    """
+    def __init__(self, nombre_tarea, texto_tarea, categoria_tarea, estado_tarea, usuarios_tareas, usuario_actual):
+        """
+        Inicializa una nueva tarea y la agrega al diccionario de tareas del usuario si los datos son válidos.
+
+        Args:
+            nombre_tarea (str): Título de la tarea.
+            texto_tarea (str): Descripción de la tarea.
+            categoria_tarea (str): Categoría de la tarea.
+            estado_tarea (str): Estado de la tarea (Completada, Por Hacer, En Progreso).
+            usuarios_tareas (dict): Diccionario de tareas de los usuarios.
+            usuario_actual (str): Correo del usuario actual logueado.
+
+        """
         correo = usuario_actual
         if correo is None:
             print("No hay ningún usuario logueado.")

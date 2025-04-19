@@ -10,31 +10,41 @@ from kivy.uix.boxlayout import BoxLayout
 sistema = Sistema_KV()
 
 def salir_app(self):
+    """
+    Detiene la aplicación Kivy.
+    """
     App.get_running_app().stop()
 
-
 class CrearUsuarioScreen(Screen):
+    """
+    Pantalla para crear un nuevo usuario.
+    """
     def crear_cuenta_kv(self):
+        """
+        Crea una nueva cuenta de usuario utilizando los datos ingresados en la interfaz.
+        """
         nombre = self.ids.nombre_input.text
         apellido = self.ids.apellido_input.text
         correo = self.ids.correo_input.text
         contraseña = self.ids.contraseña_input.text
 
-        
         Usuario_kv(nombre, apellido, correo, contraseña, sistema.usuarios)
         print("Usuario creado con éxito")
         self.manager.current = "inicio_sesion"
 
-
-
 class CrearTareaScreen(Screen):
+    """
+    Pantalla para crear una nueva tarea.
+    """
     def crear_tarea_kv(self):
+        """
+        Crea una nueva tarea utilizando los datos ingresados en la interfaz.
+        """
         nombre_tarea = self.ids.nombre_tarea_input.text
         texto_tarea = self.ids.texto_tarea_input.text
         categoria_tarea = self.ids.categoria_tarea_input.text
         estado_tarea = self.ids.estado_tarea_input.text
 
-        
         Tarea_kv(
             nombre_tarea=nombre_tarea,
             texto_tarea=texto_tarea,
@@ -45,11 +55,14 @@ class CrearTareaScreen(Screen):
         )
         self.manager.current = "dashboard"
 
-
-
-
 class CambiarContraseñaScreen(Screen):
+    """
+    Pantalla para cambiar la contraseña de un usuario.
+    """
     def cambiar_contraseña_kv(self):
+        """
+        Cambia la contraseña de un usuario utilizando los datos ingresados en la interfaz.
+        """
         correo = self.ids.correo_input.text
         contraseña_actual = self.ids.contraseña_actual_input.text
         nueva_contraseña = self.ids.nueva_contraseña_input.text
@@ -64,12 +77,16 @@ class CambiarContraseñaScreen(Screen):
 
         print(resultado)
         if resultado == 'Contraseña actualizada con éxito':
-         self.manager.current = "inicio_sesion"
-
-
+            self.manager.current = "inicio_sesion"
 
 class Inicio_de_sesion(Screen):
+    """
+    Pantalla para iniciar sesión en la aplicación.
+    """
     def iniciar_sesion_kv(self):
+        """
+        Inicia sesión utilizando los datos ingresados en la interfaz.
+        """
         correo = self.ids.correo_input.text
         contraseña = self.ids.contraseña_input.text
 
@@ -79,18 +96,23 @@ class Inicio_de_sesion(Screen):
         if resultado.startswith("Bienvenido"):
             nombre_usuario = sistema.usuarios[sistema.usuario_actual]["Nombre"]
             mensaje_bienvenida = f"Bienvenido {nombre_usuario}"
-            print(mensaje_bienvenida)  
+            print(mensaje_bienvenida)
             self.manager.current = "dashboard"
             
     def salir_app():
-     App.get_running_app().stop()
-
-
-
-
+        """
+        Detiene la aplicación Kivy.
+        """
+        App.get_running_app().stop()
 
 class EditarTareaScreen(Screen):
+    """
+    Pantalla para editar una tarea existente.
+    """
     def editar_tarea_kv(self):
+        """
+        Edita una tarea utilizando los datos ingresados en la interfaz.
+        """
         nombre_tarea = self.ids.nombre_tarea_input.text
         nuevo_texto = self.ids.nuevo_texto_input.text
         nueva_categoria = self.ids.nueva_categoria_input.text
@@ -107,7 +129,13 @@ class EditarTareaScreen(Screen):
         self.manager.current = "dashboard"
 
 class EliminarTareaScreen(Screen):
+    """
+    Pantalla para eliminar una tarea existente.
+    """
     def eliminar_tarea_kv(self):
+        """
+        Elimina una tarea utilizando los datos ingresados en la interfaz.
+        """
         nombre_tarea = self.ids.nombre_tarea_input.text
         resultado = sistema.eliminar_tarea(
             nombre_tarea=nombre_tarea
@@ -116,10 +144,19 @@ class EliminarTareaScreen(Screen):
         self.manager.current = "dashboard"
         
 class MostrarTareaScreen(Screen):
+    """
+    Pantalla para mostrar las tareas del usuario actual.
+    """
     def on_enter(self, *args):
+        """
+        Método que se ejecuta al entrar en la pantalla. Muestra las tareas del usuario.
+        """
         self.mostrar_tareas_usuario()
 
     def mostrar_tareas_usuario(self):
+        """
+        Muestra las tareas del usuario actual.
+        """
         correo = sistema.usuario_actual
         if correo is None:
             print("No hay usuario logueado.")
@@ -143,12 +180,23 @@ class MostrarTareaScreen(Screen):
             tareas_layout.add_widget(tarea_box)
             
 class DashboardScreen(Screen):
+    """
+    Pantalla principal del usuario.
+    """
     def salir_app():
-      App.get_running_app().stop()
-
+        """
+        Detiene la aplicación Kivy.
+        """
+        App.get_running_app().stop()
 
 class MyApp(App):
+    """
+    Aplicación principal de Kivy.
+    """
     def build(self):
+        """
+        Construye la interfaz de la aplicación.
+        """
         Builder.load_file("src/view/kv/iniciar_sesion.kv")  
         Builder.load_file("src/view/kv/crear_usuario.kv")
         Builder.load_file("src/view/kv/cambiar_contraseña.kv")
@@ -169,7 +217,6 @@ class MyApp(App):
         sm.add_widget(DashboardScreen(name="dashboard"))  
 
         return sm
-
 
 if __name__ == "__main__":
     MyApp().run()
