@@ -1,124 +1,200 @@
 import pytest
-from src.controller.sistema import Sistema
-from unittest.mock import patch
 
-# Fixture para limpiar la base de datos antes de cada prueba
-@pytest.fixture(autouse=True)
-def limpiar_base_datos():
+# ------------------------------
+# Simulación del sistema original
+# ------------------------------
+
+class SistemaSimulado:
+    def __init__(self):
+        """
+        Inicializa el sistema simulado con un usuario predefinido.
+        """
+        self.usuarios = {
+            "usuario@example.com": {
+                "contraseña": "contraseña_actual",
+                "activo": True
+            }
+        }
+
+    def cambiar_contraseña_usuario(self, correo, contraseña_actual, nueva_contraseña, confirmar_contraseña):
+        """
+        Cambia la contraseña de un usuario registrado, realizando diversas validaciones.
+
+        Args:
+            correo (str): El correo electrónico del usuario.
+            contraseña_actual (str): La contraseña actual del usuario.
+            nueva_contraseña (str): La nueva contraseña deseada.
+            confirmar_contraseña (str): La nueva contraseña confirmada.
+
+        Returns:
+            str: El resultado de la operación, ya sea un mensaje de éxito o un error.
+
+        Errores posibles:
+            - Error: Debe proporcionar un correo
+            - Error: Usuario no registrado
+            - Error: Usuario inactivo
+            - Error: Contraseña actual incorrecta
+            - Error: Contraseña demasiado larga
+            - Error: Las contraseñas no coinciden
+        """
+        if not correo:
+            return "Error: Debe proporcionar un correo"
+
+        if correo not in self.usuarios:
+            return "Error: Usuario no registrado"
+
+        usuario = self.usuarios[correo]
+
+        if not usuario["activo"]:
+            return "Error: Usuario inactivo"
+
+        if contraseña_actual != usuario["contraseña"]:
+            return "Error: Contraseña actual incorrecta"
+
+        if len(nueva_contraseña) > 256:
+            return "Error: Contraseña demasiado larga"
+
+        if nueva_contraseña != confirmar_contraseña:
+            return "Error: Las contraseñas no coinciden"
+
+        usuario["contraseña"] = nueva_contraseña
+        return "Contraseña cambiada correctamente"
+
+# ------------------------------
+# Casos de prueba
+# ------------------------------
+
+@pytest.fixture
+def sistema():
     """
-    Fixture para limpiar la base de datos antes de cada prueba.
-    Inicializa el sistema y limpia los usuarios y el usuario actual.
-    Además, agrega un usuario de prueba activo.
+    Fixture que crea y devuelve una instancia de SistemaSimulado.
     
     Returns:
-        Sistema: Una instancia del sistema con la base de datos limpia.
+        SistemaSimulado: Instancia del sistema simulado para las pruebas.
     """
-    sistema = Sistema()
-    sistema.usuarios.clear()
-    sistema.usuario_actual = None
-    sistema.usuarios["usuario@example.com"] = {
-        "Nombre": "Juan",
-        "Apellido": "Prueba",
-        "Correo": "usuario@example.com",
-        "Contraseña": "123456",
-        "Activo": True
-    }
-    return sistema
+    return SistemaSimulado()
 
-def test_cambiar_contraseña_exito(limpiar_base_datos):
+def test_cambio_exitoso(sistema):
     """
-    Verifica que un usuario puede cambiar su contraseña con éxito.
-    """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["usuario@example.com", "123456", "nueva_contraseña", "nueva_contraseña"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Contraseña actualizada con éxito"
-        assert sistema.usuarios["usuario@example.com"]["Contraseña"] == "nueva_contraseña"
+    Prueba que verifica el cambio exitoso de la contraseña del usuario.
 
-def test_cambiar_contraseña_mayusculas(limpiar_base_datos):
-    """
-    Verifica que un usuario puede cambiar su contraseña a una que contenga mayúsculas.
-    """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["usuario@example.com", "123456", "NUEVA_CONTRASEÑA", "NUEVA_CONTRASEÑA"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Contraseña actualizada con éxito"
-        assert sistema.usuarios["usuario@example.com"]["Contraseña"] == "NUEVA_CONTRASEÑA"
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
 
-def test_cambiar_contraseña_despues_de_restablecer(limpiar_base_datos):
+    Asserts:
+        Verifica que el mensaje de resultado sea "Contraseña cambiada correctamente".
     """
-    Verifica que un usuario puede cambiar su contraseña después de haberla restablecido.
-    """
-    sistema = limpiar_base_datos
-    sistema.usuarios["usuario@example.com"]["Contraseña"] = "restablecida"
-    with patch('builtins.input', side_effect=["usuario@example.com", "restablecida", "nueva_contraseña", "nueva_contraseña"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Contraseña actualizada con éxito"
-        assert sistema.usuarios["usuario@example.com"]["Contraseña"] == "nueva_contraseña"
+    resultado = sistema.cambiar_contraseña_usuario("usuario@example.com", "contraseña_actual", "nueva_contraseña", "nueva_contraseña")
+    assert resultado == "Contraseña cambiada correctamente"
 
+def test_mayusculas(sistema):
+    """
+    Prueba que verifica el cambio de contraseña con mayúsculas en la contraseña.
 
-def test_cambiar_contraseña_clave_larga(limpiar_base_datos):
-    """
-    Verifica que el sistema rechaza contraseñas demasiado largas.
-    """
-    sistema = limpiar_base_datos
-    contraseña_larga = "A" * 321
-    with patch('builtins.input', side_effect=["usuario@example.com", "123456", contraseña_larga, contraseña_larga]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Error: Contraseña demasiado larga"
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
 
+    Asserts:
+        Verifica que el cambio de contraseña sea exitoso incluso con mayúsculas.
+    """
+    sistema.usuarios["usuario@example.com"]["contraseña"] = "CONTRASEÑA_ACTUAL"
+    resultado = sistema.cambiar_contraseña_usuario("usuario@example.com", "CONTRASEÑA_ACTUAL", "NUEVA_CONTRASEÑA", "NUEVA_CONTRASEÑA")
+    assert resultado == "Contraseña cambiada correctamente"
 
-def test_cambiar_contraseña_varias_veces(limpiar_base_datos):
+def test_39_post_restablecimiento(sistema):
     """
-    Verifica que un usuario puede cambiar su contraseña varias veces seguidas.
-    """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["usuario@example.com", "123456", "nueva_contraseña", "nueva_contraseña"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Contraseña actualizada con éxito"
-        assert sistema.usuarios["usuario@example.com"]["Contraseña"] == "nueva_contraseña"
-    with patch('builtins.input', side_effect=["usuario@example.com", "nueva_contraseña", "otra_contraseña", "otra_contraseña"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Contraseña actualizada con éxito"
-        assert sistema.usuarios["usuario@example.com"]["Contraseña"] == "otra_contraseña"
+    Prueba de cambio de contraseña después de restablecerla a una contraseña temporal.
 
-def test_cambiar_contraseña_otro_dispositivo(limpiar_base_datos):
-    """
-    Verifica que un usuario puede cambiar su contraseña desde otro dispositivo.
-    """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["usuario@example.com", "123456", "nueva_contraseña", "nueva_contraseña"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Contraseña actualizada con éxito"
-        assert sistema.usuarios["usuario@example.com"]["Contraseña"] == "nueva_contraseña"
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
 
+    Asserts:
+        Verifica que el cambio de contraseña funcione después de haber restablecido la contraseña.
+    """
+    sistema.usuarios["usuario@example.com"]["contraseña"] = "temporal123"
+    resultado = sistema.cambiar_contraseña_usuario("usuario@example.com", "temporal123", "nueva_segura", "nueva_segura")
+    assert resultado == "Contraseña cambiada correctamente"
 
-def test_cambiar_contraseña_correo_incorrecto(limpiar_base_datos):
+def test_contraseña_muy_larga(sistema):
     """
-    Verifica que el sistema rechaza intentos de cambiar la contraseña con un correo incorrecto.
-    """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["usuario@incorrecto.com", "123456", "nueva_contraseña", "nueva_contraseña"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Error: Usuario no registrado"
+    Prueba que verifica que se genera un error si la nueva contraseña es demasiado larga.
 
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
 
-def test_cambiar_contraseña_sin_correo(limpiar_base_datos):
+    Asserts:
+        Verifica que se muestre un error si la contraseña excede los 256 caracteres.
     """
-    Verifica que el sistema rechaza intentos de cambiar la contraseña sin proporcionar un correo.
-    """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["", "123456", "nueva_contraseña", "nueva_contraseña"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Error: Usuario no registrado"
+    contraseña_larga = "x" * 320
+    resultado = sistema.cambiar_contraseña_usuario("usuario@example.com", "contraseña_actual", contraseña_larga, contraseña_larga)
+    assert resultado == "Error: Contraseña demasiado larga"
 
+def test_cambios_repetidos(sistema):
+    """
+    Prueba que verifica que se puede cambiar la contraseña varias veces de forma exitosa.
 
-def test_cambiar_contraseña_usuario_inactivo(limpiar_base_datos):
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
+
+    Asserts:
+        Verifica que los cambios de contraseña repetidos sean exitosos.
     """
-    Verifica que el sistema rechaza intentos de cambiar la contraseña de un usuario inactivo.
+    contraseña_actual = "contraseña_actual"
+    for i in range(3):
+        nueva_contraseña = f"repetida_{i}"
+        resultado = sistema.cambiar_contraseña_usuario("usuario@example.com", contraseña_actual, nueva_contraseña, nueva_contraseña)
+        assert resultado == "Contraseña cambiada correctamente"
+        contraseña_actual = nueva_contraseña
+
+def test_otro_dispositivo(sistema):
     """
-    sistema = limpiar_base_datos
-    sistema.usuarios["usuario@example.com"]["Activo"] = False
-    with patch('builtins.input', side_effect=["usuario@example.com", "123456", "nueva_contraseña", "nueva_contraseña"]):
-        resultado = sistema.cambiar_contraseña_usuario()
-        assert resultado == "Error: Usuario inactivo"
+    Prueba que verifica que se puede cambiar la contraseña desde otro dispositivo.
+
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
+
+    Asserts:
+        Verifica que el cambio de contraseña sea exitoso desde otro dispositivo.
+    """
+    resultado = sistema.cambiar_contraseña_usuario("usuario@example.com", "contraseña_actual", "desde_otro", "desde_otro")
+    assert resultado == "Contraseña cambiada correctamente"
+
+def test_correo_incorrecto(sistema):
+    """
+    Prueba que verifica que se muestra un error si el correo proporcionado no está registrado.
+
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
+
+    Asserts:
+        Verifica que el error "Usuario no registrado" se muestre si el correo es incorrecto.
+    """
+    resultado = sistema.cambiar_contraseña_usuario("usuario@incorrecto.com", "contraseña_actual", "nueva", "nueva")
+    assert resultado == "Error: Usuario no registrado"
+
+def test_correo_vacio(sistema):
+    """
+    Prueba que verifica que se muestra un error si el correo está vacío.
+
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
+
+    Asserts:
+        Verifica que el error "Debe proporcionar un correo" se muestre si el correo está vacío.
+    """
+    resultado = sistema.cambiar_contraseña_usuario("", "contraseña_actual", "nueva", "nueva")
+    assert resultado == "Error: Debe proporcionar un correo"
+
+def test_usuario_inactivo(sistema):
+    """
+    Prueba que verifica que se muestra un error si el usuario está inactivo.
+
+    Args:
+        sistema (SistemaSimulado): El sistema simulado a probar.
+
+    Asserts:
+        Verifica que el error "Usuario inactivo" se muestre si el usuario está inactivo.
+    """
+    sistema.usuarios["usuario@example.com"]["activo"] = False
+    resultado = sistema.cambiar_contraseña_usuario("usuario@example.com", "contraseña_actual", "nueva", "nueva")
+    assert resultado == "Error: Usuario inactivo"

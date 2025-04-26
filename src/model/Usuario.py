@@ -1,88 +1,60 @@
+import psycopg2
+from src.model.conexion import obtener_conexion_bd
+
 class Usuario:
     """
-    Clase para crear un nuevo usuario mediante la entrada de datos por consola.
+    Clase para representar a un usuario y encargarse de su registro en la base de datos.
     """
-    def __init__(self, usuarios):
+
+    def __init__(self, nombre_usuario, apellido, correo, contraseña):
         """
-        Inicializa un nuevo usuario y lo agrega al diccionario de usuarios si los datos son válidos.
+        Inicializa un nuevo usuario y lo agrega a la base de datos si los datos son válidos.
 
-        Args:
-            usuarios (dict): Diccionario de usuarios existentes.
-
-        """
-        correo = input("Ingrese su correo: ")
-        if correo in usuarios:
-            print("Error: Correo ya registrado")
-            return
-        
-        nombre = input("Ingrese su nombre: ")
-        if not nombre or len(nombre) > 50:
-            print("Error: Nombre demasiado largo o faltante")
-            return
-
-        apellido = input("Ingrese su apellido: ")
-        if not apellido:
-            print("Error: Apellido faltante")
-            return
-
-        contraseña = input("Ingrese su contraseña: ")
-        if len(contraseña) > 100:
-            print("Error: Contraseña demasiado larga")
-            return
-        if len(contraseña) < 8:
-            print("Error: Contraseña demasiado débil")
-            return
-
-        usuarios[correo] = {
-            "Nombre": nombre,
-            "Apellido": apellido,
-            "Correo": correo,
-            "Contraseña": contraseña
-        }
-
-        print("Usuario creado con éxito")
-
-class Usuario_kv:
-    """
-    Clase para crear un nuevo usuario mediante la entrada de datos desde la interfaz Kivy.
-    """
-    def __init__(self, nombre, apellido, correo, contraseña, usuarios):
-        """
-        Inicializa un nuevo usuario y lo agrega al diccionario de usuarios si los datos son válidos.
-
-        Args:
-            nombre (str): Nombre del usuario.
+        Parámetros:
+            nombre_usuario (str): Nombre del usuario (máx. 50 caracteres).
             apellido (str): Apellido del usuario.
-            correo (str): Correo electrónico del usuario.
-            contraseña (str): Contraseña del usuario.
-            usuarios (dict): Diccionario de usuarios existentes.
-
+            correo (str): Correo electrónico del usuario (único).
+            contraseña (str): Contraseña del usuario (entre 8 y 100 caracteres).
         """
-        if correo in usuarios:
-            print("Error: Correo ya registrado")
-            return
+        self.conn = obtener_conexion_bd()
+        self.cursor = self.conn.cursor()
+
+        if self.usuario_existente(correo):
+            raise ValueError("Error: Correo ya registrado")
         
-        if not nombre or len(nombre) > 50:
-            print("Error: Nombre demasiado largo o faltante")
-            return
+        if not nombre_usuario or len(nombre_usuario) > 50:
+            raise ValueError("Error: Nombre demasiado largo o faltante")
         
         if not apellido:
-            print("Error: Apellido faltante")
-            return
+            raise ValueError("Error: Apellido faltante")
         
         if len(contraseña) > 100:
-            print("Error: Contraseña demasiado larga")
-            return
+            raise ValueError("Error: Contraseña demasiado larga")
         
         if len(contraseña) < 8:
-            print("Error: Contraseña demasiado débil")
-            return
+            raise ValueError("Error: Contraseña demasiado débil")
+        
+        try:
+            self.cursor.execute(
+                "INSERT INTO usuario (nombre_usuario, apellido, correo, contraseña) VALUES (%s, %s, %s, %s);",
+                (nombre_usuario, apellido, correo, contraseña)
+            )
+            self.conn.commit()
+        except Exception:
+            raise Exception("Error de conexión")
+        finally:
+            self.cursor.close()
+            self.conn.close()
 
-        usuarios[correo] = {
-            "Nombre": nombre,
-            "Apellido": apellido,
-            "Correo": correo,
-            "Contraseña": contraseña
-        }
+    def usuario_existente(self, correo):
+        """
+        Verifica si el correo ya existe en la base de datos.
 
-        print("Usuario creado con éxito")
+        Parámetros:
+            correo (str): Correo electrónico a verificar.
+
+        Retorna:
+            bool: True si el correo ya está registrado, False en caso contrario.
+        """
+        self.cursor.execute("SELECT 1 FROM usuario WHERE correo = %s;", (correo,))
+        return self.cursor.fetchone() is not None

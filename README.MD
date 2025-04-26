@@ -92,18 +92,17 @@ A continuación, se presentan los casos de prueba para cada funcionalidad, cubri
 | 8  | Intentar crear tarea sin categoría          | "Hacer ejercicio", ""                     | Error: La categoría es requerida        | error    |
 | 9  | Intentar crear tarea sin estado             | "Revisar correo", Categoría: "Trabajo"    | Error: El estado es requerido           | error    |
 
-### Editar una Tarea
-| #  | Caso de Prueba                                | Entrada                                   | Resultado esperado                    | Tipo  |
-|----|----------------------------------------------|-------------------------------------------|--------------------------------------|------|
-| 10 | Editar texto de tarea existente             | "Hacer ejercicio" -> "Hacer cardio"      | Tarea editada correctamente         | Normal    |
-| 11 | Editar categoría de tarea existente         | "Estudiar", Categoría: "Educación"       | Tarea editada correctamente         | Normal    |
-| 12 | Editar estado de tarea existente            | "Terminar informe", Estado: "Completada" | Tarea editada correctamente         | Normal    |
-| 13 | Editar tarea con texto máximo permitido     | 255 caracteres                           | Tarea editada correctamente         | Extremo    |
-| 14 | Editar tarea con estado límite válido       | "Leer", Estado: "Pendiente"             | Tarea editada correctamente         | Extremo    |
-| 15 | Editar tarea con nueva categoría válida     | "Viajar", Categoría: "Placer"           | Tarea editada correctamente         | Extremo    |
-| 16 | Intentar editar tarea inexistente           | ID incorrecto                            | Error: La tarea no existe           | error    |
-| 17 | Intentar editar tarea sin cambios           | ID válido, Sin modificaciones           | Error: No hay cambios registrados   | error    |
-| 18 | Intentar editar tarea cambiando usuario     | ID válido, Nuevo usuario                 | Error: No se puede cambiar usuario  | error    |
+### Editar tarea
+|# | Caso de Prueba | Entrada | Resultado Esperado | Tipo
+10 | Editar texto de tarea existente | "Comprar leche" → "Comprar leche y pan" | Tarea actualizada correctamente | Normal
+11 | Editar categoría de tarea existente | "Ir al gimnasio", Categoría: "Deporte" | Tarea actualizada correctamente | Normal
+12 | Editar estado de tarea existente | "Leer libro", Estado: "Completada" | Tarea actualizada correctamente | Normal
+13 | Editar tarea con estado límite válido | "Estudiar", Estado: "Pendiente" | Tarea actualizada correctamente | Extremo
+14 | Editar tarea con nueva categoría válida | "Viajar", Categoría: "Placer" | Tarea actualizada correctamente | Extremo
+15 | Editar tarea con estado inusual | "Estudiar", Estado: "En pausa" | Tarea actualizada correctamente | Extremo
+16 | Intentar editar tarea inexistente | "Tarea inexistente", ID incorrecto | Error: Tarea no encontrada | Error
+17 | Intentar editar tarea sin cambios | ID válido, Sin modificaciones | Error: No hay cambios registrados | Error
+18 | Intentar editar tarea cambiando usuario | ID válido, Nuevo usuario | Error: No se puede cambiar usuario | Error
 
 ### Eliminar una Tarea
 | #  | Caso de Prueba                                | Entrada             | Resultado esperado                  | Tipo  |

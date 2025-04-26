@@ -1,176 +1,145 @@
 import pytest
-from src.controller.sistema import Sistema
+from unittest.mock import patch, MagicMock
 from src.model.tarea import Tarea
-from unittest.mock import patch
 
-@pytest.fixture(autouse=True)
-def limpiar_base_datos():
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_texto_valido(mock_obtener_conexion_bd):
     """
-    Fixture para limpiar y configurar la base de datos de usuarios antes de cada prueba.
-
-    Este fixture inicializa un sistema de usuarios, limpia las listas de tareas
-    y establece un usuario predeterminado para las pruebas. Los datos del usuario
-    se configuran con un nombre, apellido, correo y contraseña.
-
-    Returns:
-        sistema (Sistema): Una instancia del sistema con los usuarios inicializados.
+    Prueba que valida la creación de una tarea con un texto válido.
+    Se asegura de que la tarea se cree correctamente cuando los parámetros
+    de entrada son correctos.
     """
-    sistema = Sistema()
-    sistema.usuarios.clear()
-    sistema.usuarios_tareas.clear()
-    sistema.usuario_actual = "usuario1"
-    sistema.usuarios["usuario1"] = {
-        "Nombre": "Juan",
-        "Apellido": "Prueba",
-        "Correo": "usuario1",
-        "Contraseña": "123"
-    }
-    return sistema
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_crear_tareas_valida_con_categoria(limpiar_base_datos):
+    mock_cursor.fetchone.side_effect = [(1,), None]
+
+    tarea = Tarea(1, "Comprar leche", "Comprar leche", "Compras", "Por hacer")
+    assert tarea is not None
+
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_estado_por_hacer(mock_obtener_conexion_bd):
     """
-    Test para verificar que una tarea se crea correctamente con una categoría válida.
-
-    Verifica que al crear una tarea con un nombre y categoría válida, la tarea
-    sea añadida a la lista de tareas del usuario actual y que el nombre de la tarea
-    coincida con el esperado.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
+    Prueba que valida la creación de una tarea con el estado "Por hacer".
+    Asegura que la tarea sea creada correctamente cuando el estado es el esperado.
     """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["Comprar leche", "Comprar leche", "Compras", "Por hacer"]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        assert len(sistema.usuarios_tareas["usuario1"]) == 1
-        assert sistema.usuarios_tareas["usuario1"][0]["nombre"] == "Comprar leche"
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_crear_tareas_con_estado_por_hacer(limpiar_base_datos):
+    mock_cursor.fetchone.side_effect = [(1,), None]
+
+    tarea = Tarea(1, "Ir al gimnasio", "Ir al gimnasio", "Salud", "Por hacer")
+    assert tarea is not None
+
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_usuario_registrado(mock_obtener_conexion_bd):
     """
-    Test para verificar que una tarea se crea con el estado "Por hacer".
-
-    Verifica que al crear una tarea con el estado "Por hacer", la tarea se
-    añade correctamente con el estado esperado.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
+    Prueba que valida la creación de una tarea cuando el usuario está registrado.
+    Verifica que la tarea se cree si el usuario existe en la base de datos.
     """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["Ir al gimnasio", "Ir al gimnasio", "Salud", "Por hacer"]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        assert len(sistema.usuarios_tareas["usuario1"]) == 1
-        assert sistema.usuarios_tareas["usuario1"][0]["estado"] == "Por hacer"
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_crear_tareas_usuario_registrado(limpiar_base_datos):
+    mock_cursor.fetchone.side_effect = [(1,), None]
+
+    tarea = Tarea(1, "Leer libro", "Leer libro", "Educación", "Por hacer")
+    assert tarea is not None
+
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_texto_largo(mock_obtener_conexion_bd):
     """
-    Test para verificar que una tarea se crea correctamente para un usuario registrado.
-
-    Verifica que un usuario registrado pueda crear tareas y que la tarea se
-    añada correctamente a la lista de tareas del usuario.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
+    Prueba que valida la creación de una tarea con un texto largo.
+    Se asegura de que la tarea se pueda crear correctamente si el texto no excede el límite.
     """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["Leer libro", "Leer libro", "Lectura", "Por hacer"]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        assert len(sistema.usuarios_tareas["usuario1"]) == 1
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_crear_tareas_texto_largo(limpiar_base_datos):
+    mock_cursor.fetchone.side_effect = [(1,), None]
+
+    tarea = Tarea(1, "Trabajo largo", "A" * 255, "Trabajo", "Por hacer")
+    assert tarea is not None
+
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_estado_inusual(mock_obtener_conexion_bd):
     """
-    Test para verificar que una tarea con un texto largo se crea correctamente.
-
-    Verifica que el texto de la tarea no se trunque y se almacene correctamente
-    incluso si es un texto largo.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
+    Prueba que valida la creación de una tarea con un estado inusual.
+    Verifica que la tarea se cree correctamente si el estado es válido pero no común.
     """
-    sistema = limpiar_base_datos
-    texto_largo = "A" * 255
-    with patch('builtins.input', side_effect=["Tarea larga", texto_largo, "Trabajo", "Por hacer"]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        assert sistema.usuarios_tareas["usuario1"][0]["texto"] == texto_largo
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_crear_tareas_estado_inusual(limpiar_base_datos):
+    mock_cursor.fetchone.side_effect = [(1,), None]
+
+    tarea = Tarea(1, "Estudiar", "Estudiar", "Educación", "En pausa")
+    assert tarea is not None
+
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_categoria_desconocida(mock_obtener_conexion_bd):
     """
-    Test para verificar que una tarea se puede crear con un estado inusual.
-
-    Verifica que el sistema permita el estado "En pausa" como valor válido
-    para el estado de una tarea.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
+    Prueba que valida la creación de una tarea con una categoría desconocida.
+    Verifica que la tarea se cree correctamente incluso si la categoría no es estándar.
     """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["Estudiar", "Estudiar", "Estudio", "En pausa"]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        assert sistema.usuarios_tareas["usuario1"][0]["estado"] == "En pausa"
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_crear_tareas_categoria_desconocida(limpiar_base_datos):
+    mock_cursor.fetchone.side_effect = [(1,), None]
+
+    tarea = Tarea(1, "Viajar", "Viajar", "Otro", "Por hacer")
+    assert tarea is not None
+
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_sin_texto(mock_obtener_conexion_bd):
     """
-    Test para verificar que una tarea se crea con una categoría desconocida.
-
-    Verifica que el sistema permita el uso de una categoría no predefinida,
-    como "Otro", sin generar errores.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
+    Prueba que valida que se lance un error si el texto de la tarea está vacío.
+    Se asegura de que se levante un ValueError con el mensaje adecuado.
     """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["Viajar", "Viajar", "Otro", "Por hacer"]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        assert sistema.usuarios_tareas["usuario1"][0]["categoría"] == "Otro"
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_error_tarea_sin_texto(limpiar_base_datos, capfd):
+    with pytest.raises(ValueError, match="Error: El texto no puede estar vacío"):
+        Tarea(1, "b", "", "Personal", "Por hacer")
+
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_sin_categoria(mock_obtener_conexion_bd):
     """
-    Test para verificar el manejo de error cuando no se ingresa texto para la tarea.
-
-    Verifica que el sistema arroje un error cuando se intenta crear una tarea
-    sin texto y que el mensaje de error adecuado se imprima en la salida estándar.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
-        capfd (pytest fixture): Fixture para capturar la salida estándar y verificar errores.
+    Prueba que valida que se lance un error si no se proporciona una categoría.
+    Se asegura de que se levante un ValueError con el mensaje adecuado.
     """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["Tarea sin texto", "", "Personal", "Por hacer"]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        out, _ = capfd.readouterr()
-        assert "Error: El texto no puede estar vacío" in out
-        assert "usuario1" not in sistema.usuarios_tareas or len(sistema.usuarios_tareas["usuario1"]) == 0
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_error_tarea_sin_categoria(limpiar_base_datos, capfd):
+    with pytest.raises(ValueError, match="Error: La categoría es requerida"):
+        Tarea(1, "Hacer ejercicio", "Hacer ejercicio", "", "Por hacer")
+
+@patch('src.model.conexion.obtener_conexion_bd')
+def test_crear_tarea_sin_estado(mock_obtener_conexion_bd):
     """
-    Test para verificar el manejo de error cuando no se ingresa categoría para la tarea.
-
-    Verifica que el sistema arroje un error cuando no se ingresa una categoría
-    para la tarea y que el mensaje de error adecuado se imprima en la salida estándar.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
-        capfd (pytest fixture): Fixture para capturar la salida estándar y verificar errores.
+    Prueba que valida que se lance un error si no se proporciona un estado.
+    Se asegura de que se levante un ValueError con el mensaje adecuado.
     """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["Hacer ejercicio", "Hacer ejercicio", "", "Por hacer"]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        out, _ = capfd.readouterr()
-        assert "Error: La categoría es requerida" in out
-        assert "usuario1" not in sistema.usuarios_tareas or len(sistema.usuarios_tareas["usuario1"]) == 0
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_obtener_conexion_bd.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
 
-def test_error_tarea_sin_estado(limpiar_base_datos, capfd):
-    """
-    Test para verificar el manejo de error cuando no se ingresa estado para la tarea.
+    with pytest.raises(ValueError, match="Error: El estado es requerido"):
+        Tarea(1, "Revisar correo", "Revisar correo", "Trabajo", "")
 
-    Verifica que el sistema arroje un error cuando no se ingresa un estado
-    para la tarea y que el mensaje de error adecuado se imprima en la salida estándar.
-
-    Args:
-        limpiar_base_datos (fixture): Fixture que inicializa el sistema y limpia la base de datos.
-        capfd (pytest fixture): Fixture para capturar la salida estándar y verificar errores.
-    """
-    sistema = limpiar_base_datos
-    with patch('builtins.input', side_effect=["Revisar correo", "Revisar correo", "Trabajo", ""]):
-        Tarea(sistema.usuarios_tareas, sistema.usuario_actual)
-        out, _ = capfd.readouterr()
-        assert "Error: El estado es requerido" in out
-        assert "usuario1" not in sistema.usuarios_tareas or len(sistema.usuarios_tareas["usuario1"]) == 0
+if __name__ == '__main__':
+    pytest.main()

@@ -1,311 +1,199 @@
 from datetime import datetime
+from src.model.conexion import obtener_conexion_bd
 
 class Sistema:
     """
-    Clase que gestiona el sistema de usuarios y tareas. Permite la creación de cuentas, inicio de sesión,
-    edición y eliminación de tareas, y actualización de contraseñas de usuario.
+    Clase que administra el sistema de gestión de usuarios y tareas.
 
-    Atributos:
-        usuarios (dict): Diccionario que almacena los usuarios registrados, con el correo como clave.
-        usuarios_tareas (dict): Diccionario que almacena las tareas de cada usuario, con el correo como clave.
-        usuario_actual (str | None): Correo del usuario actualmente autenticado. Si no hay usuario autenticado, es None.
-
-    Métodos:
-        cambiar_contraseña_usuario(): Permite cambiar la contraseña de un usuario autenticado.
-        iniciar_sesion(): Permite iniciar sesión con el correo y la contraseña de un usuario.
-        editar_tarea(): Permite editar una tarea de un usuario autenticado.
-        eliminar_tarea(): Permite eliminar una tarea de un usuario autenticado.
-        mostrar_tareas_usuario(): Muestra todas las tareas de un usuario autenticado.
+    Funcionalidades:
+        - Iniciar sesión de usuario.
+        - Cambiar contraseña.
+        - Editar, eliminar y mostrar tareas asignadas a un usuario.
     """
 
     def __init__(self):
-        self.usuarios = {}
-        self.usuarios_tareas = {}
-        self.usuario_actual = None
-
-    def cambiar_contraseña_usuario(self):
         """
-        Permite cambiar la contraseña de un usuario autenticado, solicitando la contraseña actual
-        y una nueva contraseña que debe ser confirmada.
-
-        Returns:
-            str: Mensaje indicando si la contraseña se actualizó con éxito o si hubo un error.
+        Inicializa la conexión a la base de datos y variables de sesión del usuario.
         """
-        intentos = 3
-        correo = input("Ingrese su correo: ")
-
-        if correo not in self.usuarios:
-            return "Error: Usuario no registrado"
-        if not self.usuarios[correo].get("Activo", True):
-            return "Error: Usuario inactivo"
-
-        contraseña_actual = input("Ingrese su contraseña actual: ")
-        if self.usuarios[correo]["Contraseña"] != contraseña_actual:
-            return "Error: Contraseña incorrecta"
-
-        while intentos > 0:
-            nueva_contraseña = input("Ingrese una contraseña nueva: ")
-            confirmar = input("Ingrese nuevamente la contraseña nueva: ")
-            if nueva_contraseña == confirmar:
-                if len(nueva_contraseña) > 320:
-                    return "Error: Contraseña demasiado larga"
-                self.usuarios[correo]["Contraseña"] = nueva_contraseña
-                return "Contraseña actualizada con éxito"
-            else:
-                intentos -= 1
-                print(f"Las contraseñas son diferentes, te quedan {intentos} intentos disponibles")
-
-        return "Demasiados intentos fallidos, inténtalo más tarde"
-
-    def iniciar_sesion(self):
-        """
-        Permite iniciar sesión con el correo y la contraseña de un usuario.
-
-        Returns:
-            str: Mensaje indicando si el inicio de sesión fue exitoso o si hubo un error.
-        """
-        correo = input("Ingrese su correo: ").lower()
-        contraseña = input("Ingrese su contraseña: ")
-
-        if correo not in self.usuarios:
-            return "Error: Usuario no registrado"
-        if not self.usuarios[correo].get("Activo", True):
-            return "Error: Usuario inactivo"
-        if contraseña == self.usuarios[correo]["Contraseña"]:
-            self.usuario_actual = correo
-            return f"Bienvenido {self.usuarios[correo]['Nombre']}"
-
-        return "Error: Credenciales incorrectas"
-
-    def editar_tarea(self):
-        """
-        Permite editar una tarea de un usuario autenticado.
-
-        Returns:
-            str: Mensaje indicando si la tarea fue actualizada con éxito o si hubo un error.
-        """
-        correo = self.usuario_actual
-        if correo is None:
-            return "No hay usuario logueado."
-
-        nombre_tarea = input("Ingrese el título de la tarea que desea editar: ")
-        tareas = self.usuarios_tareas.get(correo, [])
-
-        for tarea in tareas:
-            if tarea["nombre"] == nombre_tarea:
-                nuevo_texto = input("Ingresa el nuevo texto de la tarea: ")
-                nueva_categoria = input("Ingrese una nueva categoría para la tarea: ")
-                nuevo_estado = input("Estado actualizado de la tarea (Completada, Por Hacer, En Progreso): ")
-
-                if not nuevo_texto and not nueva_categoria and not nuevo_estado:
-                    return "Error: No hay cambios registrados"
-
-                tarea["texto"] = nuevo_texto if nuevo_texto else tarea["texto"]
-                tarea["fecha"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                tarea["categoría"] = nueva_categoria if nueva_categoria else tarea["categoría"]
-                tarea["estado"] = nuevo_estado if nuevo_estado else tarea["estado"]
-                return "Tarea actualizada con éxito."
-
-        return "La tarea no existe."
-
-    def eliminar_tarea(self):
-        """
-        Permite eliminar una tarea de un usuario autenticado.
-
-        Returns:
-            str: Mensaje indicando si la tarea fue eliminada con éxito o si no se encontró.
-        """
-        correo = self.usuario_actual
-        if correo is None:
-            return "No hay usuario logueado."
-
-        nombre_tarea = input("Ingrese el título de la tarea que desea eliminar: ")
-        if not nombre_tarea:
-            return "Error: Debe proporcionar un ID"
-
-        tareas = self.usuarios_tareas.get(correo, [])
-        for i, tarea in enumerate(tareas):
-            if tarea["nombre"] == nombre_tarea:
-                del tareas[i]
-                return "Tarea eliminada."
-
-        return "Tarea no encontrada."
-
-    def mostrar_tareas_usuario(self):
-        """
-        Muestra todas las tareas de un usuario autenticado.
-
-        Returns:
-            None: Imprime las tareas del usuario en consola o un mensaje de error si no hay tareas.
-        """
-        correo = self.usuario_actual
-        if correo is None:
-            print("No hay usuario logueado.")
-            return
-
-        tareas = self.usuarios_tareas.get(correo, [])
-        if not tareas:
-            print("No tienes tareas.")
-            return
-
-        for tarea in tareas:
-            print("\n---")
-            print(f"Nombre: {tarea['nombre']}")
-            print(f"Texto: {tarea['texto']}")
-            print(f"Fecha: {tarea['fecha']}")
-            print(f"Categoría: {tarea['categoría']}")
-            print(f"Estado: {tarea['estado']}")
-
-class Sistema_KV:
-    """
-    Clase que gestiona el sistema de usuarios y tareas con un enfoque de trabajo basado en parámetros 
-    pasados a los métodos, en lugar de usar entradas interactivas.
-
-    Atributos:
-        usuarios (dict): Diccionario que almacena los usuarios registrados, con el correo como clave.
-        usuarios_tareas (dict): Diccionario que almacena las tareas de cada usuario, con el correo como clave.
-        usuario_actual (str | None): Correo del usuario actualmente autenticado. Si no hay usuario autenticado, es None.
-
-    Métodos:
-        cambiar_contraseña_usuario(correo, contraseña_actual, nueva_contraseña, confirmar_contraseña): 
-            Permite cambiar la contraseña de un usuario dado su correo y las contraseñas proporcionadas.
-
-        iniciar_sesion(correo, contraseña): 
-            Permite iniciar sesión con el correo y la contraseña de un usuario.
-
-        editar_tarea(nombre_tarea, nuevo_texto, nueva_categoria, nuevo_estado): 
-            Permite editar una tarea de un usuario autenticado.
-
-        eliminar_tarea(nombre_tarea): 
-            Permite eliminar una tarea de un usuario autenticado.
-
-        mostrar_tareas_usuario(): 
-            Muestra todas las tareas de un usuario autenticado.
-    """
-
-    def __init__(self):
-        self.usuarios = {}
-        self.usuarios_tareas = {}
-        self.usuario_actual = None
-
-    def cambiar_contraseña_usuario(self, correo, contraseña_actual, nueva_contraseña, confirmar_contraseña):
-        """
-        Permite cambiar la contraseña de un usuario, validando la contraseña actual, la nueva contraseña
-        y confirmando que ambas coinciden.
-
-        Args:
-            correo (str): Correo del usuario cuya contraseña se desea cambiar.
-            contraseña_actual (str): Contraseña actual del usuario.
-            nueva_contraseña (str): Nueva contraseña que se desea establecer.
-            confirmar_contraseña (str): Confirmación de la nueva contraseña.
-
-        Returns:
-            str: Mensaje indicando si la contraseña fue actualizada con éxito o si hubo un error.
-        """
-        intentos = 3
-
-        if correo not in self.usuarios:
-            return "Error: Usuario no registrado"
-        if not self.usuarios[correo].get("Activo", True):
-            return "Error: Usuario inactivo"
-        if self.usuarios[correo]["Contraseña"] != contraseña_actual:
-            return "Error: Contraseña incorrecta"
-
-        while intentos > 0:
-            if nueva_contraseña == confirmar_contraseña:
-                if len(nueva_contraseña) > 320:
-                    return "Error: Contraseña demasiado larga"
-                self.usuarios[correo]["Contraseña"] = nueva_contraseña
-                return "Contraseña actualizada con éxito"
-            else:
-                intentos -= 1
-                if intentos == 0:
-                    return "Demasiados intentos fallidos, inténtalo más tarde"
-        return "Error inesperado"
+        self.conn = obtener_conexion_bd()
+        self.cursor = self.conn.cursor()
+        self.usuario_actual_id = None
+        self.nombre_usuario = None
 
     def iniciar_sesion(self, correo, contraseña):
         """
-        Permite iniciar sesión con el correo y la contraseña de un usuario.
+        Inicia sesión del usuario.
 
-        Args:
-            correo (str): Correo del usuario que intenta iniciar sesión.
+        Parámetros:
+            correo (str): Correo del usuario.
             contraseña (str): Contraseña del usuario.
 
-        Returns:
-            str: Mensaje indicando si el inicio de sesión fue exitoso o si hubo un error.
+        Retorna:
+            str: Mensaje de bienvenida o error.
         """
-        if correo not in self.usuarios:
+        correo = correo.lower()  # Normalizar el correo a minúsculas
+        self.cursor.execute("""
+            SELECT id_usuario, nombre_usuario, contraseña, activo
+            FROM Usuario
+            WHERE correo = %s
+        """, (correo,))
+        resultado = self.cursor.fetchone()
+
+        if not resultado:
             return "Error: Usuario no registrado"
-        if not self.usuarios[correo].get("Activo", True):
+
+        id_usuario, nombre_usuario, contraseña_db, activo = resultado
+
+        if not activo:
             return "Error: Usuario inactivo"
-        if contraseña == self.usuarios[correo]["Contraseña"]:
-            self.usuario_actual = correo
-            return f"Bienvenido {self.usuarios[correo]['Nombre']}"
-        return "Error: Credenciales incorrectas"
+
+        if contraseña != contraseña_db:
+            return "Error: Contraseña incorrecta"
+
+        self.usuario_actual_id = id_usuario
+        self.nombre_usuario = nombre_usuario
+        return f"Bienvenido {nombre_usuario}"
+
+    def cambiar_contraseña_usuario(self, correo, contraseña_actual, nueva_contraseña, confirmar_contraseña):
+        """
+        Permite a un usuario cambiar su contraseña.
+
+        Parámetros:
+            correo (str): Correo del usuario.
+            contraseña_actual (str): Contraseña actual del usuario.
+            nueva_contraseña (str): Nueva contraseña deseada.
+            confirmar_contraseña (str): Confirmación de la nueva contraseña.
+
+        Retorna:
+            str: Mensaje de éxito o error.
+        """
+        self.cursor.execute("""
+            SELECT id_usuario, contraseña FROM Usuario WHERE correo = %s
+        """, (correo,))
+        resultado = self.cursor.fetchone()
+
+        if not resultado:
+            return "Error: Usuario no encontrado"
+
+        id_usuario, contraseña_db = resultado
+
+        if contraseña_actual != contraseña_db:
+            return "Error: Contraseña actual incorrecta"
+
+        if nueva_contraseña != confirmar_contraseña:
+            return "Error: Las contraseñas no coinciden"
+
+        self.cursor.execute("""
+            UPDATE Usuario SET contraseña = %s WHERE id_usuario = %s
+        """, (nueva_contraseña, id_usuario))
+        self.conn.commit()
+        return "Contraseña actualizada correctamente"
 
     def editar_tarea(self, nombre_tarea, nuevo_texto, nueva_categoria, nuevo_estado):
         """
-        Permite editar una tarea de un usuario autenticado.
+        Permite al usuario editar una tarea existente.
 
-        Args:
+        Parámetros:
             nombre_tarea (str): Nombre de la tarea a editar.
-            nuevo_texto (str): Nuevo texto para la tarea.
-            nueva_categoria (str): Nueva categoría para la tarea.
-            nuevo_estado (str): Nuevo estado para la tarea.
+            nuevo_texto (str): Nuevo contenido de la tarea.
+            nueva_categoria (str): Nueva categoría de la tarea.
+            nuevo_estado (str): Nuevo estado de la tarea.
 
-        Returns:
-            str: Mensaje indicando si la tarea fue actualizada con éxito o si hubo un error.
+        Retorna:
+            str: Mensaje de éxito o error.
         """
-        correo = self.usuario_actual
-        if correo is None:
-            return "No hay usuario logueado."
+        if self.usuario_actual_id is None:
+            return "Debes iniciar sesión"
 
-        tareas = self.usuarios_tareas.get(correo, [])
-        for tarea in tareas:
-            if tarea["nombre"] == nombre_tarea:
-                tarea["texto"] = nuevo_texto if nuevo_texto else tarea["texto"]
-                tarea["fecha"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                tarea["categoría"] = nueva_categoria if nueva_categoria else tarea["categoría"]
-                tarea["estado"] = nuevo_estado if nuevo_estado else tarea["estado"]
-                return "Tarea actualizada con éxito."
+        self.cursor.execute("""
+            SELECT T.id_tarea FROM Tarea T
+            JOIN Tarea_usuario TU ON T.id_tarea = TU.id_tarea
+            WHERE TU.id_usuario = %s AND T.nombre_tarea = %s
+        """, (self.usuario_actual_id, nombre_tarea))
+        resultado = self.cursor.fetchone()
 
-        return "La tarea no existe."
+        if not resultado:
+            return "Tarea no encontrada"
+
+        id_tarea = resultado[0]
+
+        if not nuevo_texto and not nueva_categoria and not nuevo_estado:
+            return "No hay cambios registrados"
+
+        self.cursor.execute("""
+            UPDATE Tarea SET texto_tarea = %s, categoria = %s, estado = %s, fecha_creacion = %s
+            WHERE id_tarea = %s
+        """, (nuevo_texto, nueva_categoria, nuevo_estado, datetime.now(), id_tarea))
+
+        self.conn.commit()
+        return "Tarea actualizada correctamente"
 
     def eliminar_tarea(self, nombre_tarea):
         """
-        Permite eliminar una tarea de un usuario autenticado.
+        Elimina una tarea asignada al usuario actual.
 
-        Args:
+        Parámetros:
             nombre_tarea (str): Nombre de la tarea a eliminar.
 
-        Returns:
-            str: Mensaje indicando si la tarea fue eliminada con éxito o si no se encontró.
+        Retorna:
+            str: Mensaje de éxito o error.
         """
-        correo = self.usuario_actual
-        if correo is None:
-            return "No hay usuario logueado."
+        if self.usuario_actual_id is None:
+            return "Error: Debe iniciar sesión"
 
-        tareas = self.usuarios_tareas.get(correo, [])
-        for i, tarea in enumerate(tareas):
-            if tarea["nombre"] == nombre_tarea:
-                del tareas[i]
-                return "Tarea eliminada."
+        if not nombre_tarea:
+            return "Error: Debe proporcionar un nombre de tarea"
 
-        return "Tarea no encontrada."
+        self.cursor.execute("""
+            SELECT T.id_tarea, T.estado, TU.id_usuario
+            FROM Tarea T
+            JOIN Tarea_usuario TU ON T.id_tarea = TU.id_tarea
+            WHERE T.nombre_tarea = %s
+            LIMIT 1
+        """, (nombre_tarea,))
+        resultado = self.cursor.fetchone()
+
+        if not resultado:
+            return "Error: La tarea no existe"
+
+        id_tarea, estado_tarea, id_usuario_propietario = resultado
+
+        if id_usuario_propietario != self.usuario_actual_id:
+            return "Error: No tiene permisos"
+
+        if estado_tarea == "Completada":
+            return "Error: No se puede eliminar una tarea completada"
+
+        self.cursor.execute("""
+            DELETE FROM Tarea_usuario WHERE id_tarea = %s AND id_usuario = %s
+        """, (id_tarea, self.usuario_actual_id))
+
+        self.cursor.execute("""
+            DELETE FROM Tarea WHERE id_tarea = %s
+        """, (id_tarea,))
+        
+        self.conn.commit()
+        return "Tarea eliminada correctamente"
 
     def mostrar_tareas_usuario(self):
         """
-        Muestra todas las tareas de un usuario autenticado.
+        Muestra todas las tareas asignadas al usuario actualmente autenticado.
 
-        Returns:
-            None: Imprime las tareas del usuario en consola o un mensaje de error si no hay tareas.
+        Retorna:
+            str | list: Mensaje de error si no ha iniciado sesión, o lista de tareas si existen.
         """
-        correo = self.usuario_actual
-        if correo is None:
-            return "No hay usuario logueado."
+        if self.usuario_actual_id is None:
+            return "Debes iniciar sesión"
 
-        tareas = self.usuarios_tareas.get(correo, [])
+        self.cursor.execute("""
+            SELECT T.nombre_tarea, T.texto_tarea, T.categoria, T.estado, T.fecha_creacion
+            FROM Tarea T
+            JOIN Tarea_usuario TU ON T.id_tarea = TU.id_tarea
+            WHERE TU.id_usuario = %s
+        """, (self.usuario_actual_id,))
+        tareas = self.cursor.fetchall()
+
         if not tareas:
-            return "No tienes tareas."
-        
+            return "No tienes tareas registradas"
+
         return tareas
