@@ -77,8 +77,6 @@ Cada usuario podrá ver y gestionar solo sus tareas.
 
 A continuación, se presentan los casos de prueba para cada funcionalidad, cubriendo escenarios normales, extremos y de error.
 
-## Casos de Prueba
-
 ### Crear una Tarea
 | #  | Caso de Prueba                                | Entrada                                     | Resultado esperado                        | Tipo  |
 |----|----------------------------------------------|---------------------------------------------|------------------------------------------|------|
@@ -88,21 +86,22 @@ A continuación, se presentan los casos de prueba para cada funcionalidad, cubri
 | 4  | Crear tarea con texto más largo permitido   | 255 caracteres, Categoría: "Trabajo"       | Tarea creada correctamente              | Extremos    |
 | 5  | Crear tarea con estado inusual              | "Estudiar", Estado: "En pausa"            | Tarea creada correctamente              | Extremos    |
 | 6  | Crear tarea con categoría desconocida       | "Viajar", Categoría: "Otro"               | Tarea creada correctamente              | Extremos    |
-| 7  | Intentar crear tarea sin texto              | "", Categoría: "Personal"                 | Error: El texto no puede estar vacío    | error    |
-| 8  | Intentar crear tarea sin categoría          | "Hacer ejercicio", ""                     | Error: La categoría es requerida        | error    |
-| 9  | Intentar crear tarea sin estado             | "Revisar correo", Categoría: "Trabajo"    | Error: El estado es requerido           | error    |
+| 7  | Intentar crear tarea sin texto              | "", Categoría: "Personal"                 | Error: El texto no puede estar vacío    | Error    |
+| 8  | Intentar crear tarea sin categoría          | "Hacer ejercicio", ""                     | Error: La categoría es requerida        | Error    |
+| 9  | Intentar crear tarea sin estado             | "Revisar correo", Categoría: "Trabajo"    | Error: El estado es requerido           | Error    |
 
 ### Editar tarea
-|# | Caso de Prueba | Entrada | Resultado Esperado | Tipo
-10 | Editar texto de tarea existente | "Comprar leche" → "Comprar leche y pan" | Tarea actualizada correctamente | Normal
-11 | Editar categoría de tarea existente | "Ir al gimnasio", Categoría: "Deporte" | Tarea actualizada correctamente | Normal
-12 | Editar estado de tarea existente | "Leer libro", Estado: "Completada" | Tarea actualizada correctamente | Normal
-13 | Editar tarea con estado límite válido | "Estudiar", Estado: "Pendiente" | Tarea actualizada correctamente | Extremo
-14 | Editar tarea con nueva categoría válida | "Viajar", Categoría: "Placer" | Tarea actualizada correctamente | Extremo
-15 | Editar tarea con estado inusual | "Estudiar", Estado: "En pausa" | Tarea actualizada correctamente | Extremo
-16 | Intentar editar tarea inexistente | "Tarea inexistente", ID incorrecto | Error: Tarea no encontrada | Error
-17 | Intentar editar tarea sin cambios | ID válido, Sin modificaciones | Error: No hay cambios registrados | Error
-18 | Intentar editar tarea cambiando usuario | ID válido, Nuevo usuario | Error: No se puede cambiar usuario | Error
+| #  | Caso de Prueba                              | Entrada                                    | Resultado esperado                        | Tipo  |
+|----|--------------------------------------------|--------------------------------------------|------------------------------------------|-------|
+| 10 | Editar texto de tarea existente            | "Comprar leche" → "Comprar leche y pan"    | Tarea actualizada correctamente          | Normal    |
+| 11 | Editar categoría de tarea existente        | "Ir al gimnasio", Categoría: "Deporte"     | Tarea actualizada correctamente          | Normal    |
+| 12 | Editar estado de tarea existente           | "Leer libro", Estado: "Completada"         | Tarea actualizada correctamente          | Normal    |
+| 13 | Editar tarea con estado límite válido      | "Estudiar", Estado: "Pendiente"            | Tarea actualizada correctamente          | Extremo   |
+| 14 | Editar tarea con nueva categoría válida    | "Viajar", Categoría: "Placer"              | Tarea actualizada correctamente          | Extremo   |
+| 15 | Editar tarea con estado inusual            | "Estudiar", Estado: "En pausa"             | Tarea actualizada correctamente          | Extremo   |
+| 16 | Intentar editar tarea inexistente          | "Tarea inexistente", ID incorrecto         | Error: Tarea no encontrada               | Error    |
+| 17 | Intentar editar tarea sin cambios          | ID válido, Sin modificaciones              | Error: No hay cambios registrados        | Error    |
+| 18 | Intentar editar tarea cambiando usuario    | ID válido, Nuevo usuario                   | Error: No se puede cambiar usuario       | Error    |
 
 ### Eliminar una Tarea
 | #  | Caso de Prueba                                | Entrada             | Resultado esperado                  | Tipo  |
@@ -112,26 +111,25 @@ A continuación, se presentan los casos de prueba para cada funcionalidad, cubri
 | 21 | Eliminar tarea en estado "Por hacer"        | ID válido           | Tarea eliminada correctamente     | Normal    |
 | 22 | Eliminar tarea con ID límite permitido      | ID más alto permitido | Tarea eliminada correctamente   | Extremo   |
 | 23 | Eliminar tarea con muchas ediciones previas | ID válido           | Tarea eliminada correctamente     | Extremo   |
-| 24 | Eliminar tarea con usuario con muchas tareas | ID válido           | Tarea eliminada correctamente     | Extremo    |
-| 25 | Intentar eliminar tarea inexistente         | ID incorrecto       | Error: La tarea no existe         | error   |
-| 26 | Intentar eliminar tarea sin permisos        | ID de otro usuario  | Error: No tiene permisos          | error   |
-| 27 | Intentar eliminar tarea sin ID              | ""                  | Error: Debe proporcionar un ID    | error   |
+| 24 | Eliminar tarea con usuario con muchas tareas | ID válido           | Tarea eliminada correctamente     | Extremo   |
+| 25 | Intentar eliminar tarea inexistente         | ID incorrecto       | Error: La tarea no existe         | Error   |
+| 26 | Intentar eliminar tarea sin permisos        | ID de otro usuario  | Error: No tiene permisos          | Error   |
+| 27 | Intentar eliminar tarea sin ID              | ""                  | Error: Debe proporcionar un ID    | Error   |
 
 ### Iniciar Sesión
 | #  | Caso de Prueba                                | Entrada                                    | Resultado esperado                   | Tipo  |
 |----|----------------------------------------------|--------------------------------------------|-------------------------------------|------|
-| 28 | Usuario inicia sesión correctamente        | usuario@example.com, Contraseña correcta  | Inicio de sesión exitoso          | Normal    |
-| 29 | Usuario inicia sesión con mayúsculas       | USUARIO@EXAMPLE.COM, Contraseña correcta  | Inicio de sesión exitoso          | Normal    |
-| 30 | Usuario inicia sesión después de cerrar sesión | usuario@example.com, Contraseña correcta | Inicio de sesión exitoso       | Normal    |
-| 31 | Usuario inicia sesión con contraseña larga | usuario@example.com, 128 caracteres       | Inicio de sesión exitoso          | Extremo    |
-| 32 | Usuario inicia sesión con correo muy largo | 320 caracteres, Contraseña correcta       | Inicio de sesión exitoso          | Extremo    |
-| 33 | Usuario inicia sesión con múltiples intentos | usuario@example.com, intentos repetidos | Inicio de sesión exitoso          | Extremo    |
-| 34 | Intentar iniciar sesión con correo incorrecto | usuario@incorrecto.com, Contraseña correcta | Error: Usuario no registrado     | error  |
-| 35 | Intentar iniciar sesión con contraseña incorrecta | usuario@example.com, Contraseña incorrecta | Error: Credenciales incorrectas| error    |
-| 36 | Intentar iniciar sesión con usuario inactivo | usuario@example.com, Contraseña correcta  | Error: Usuario inactivo           |  error|
+| 28 | Usuario inicia sesión correctamente         | usuario@example.com, Contraseña correcta  | Inicio de sesión exitoso           | Normal    |
+| 29 | Usuario inicia sesión con mayúsculas        | USUARIO@EXAMPLE.COM, Contraseña correcta  | Inicio de sesión exitoso           | Normal    |
+| 30 | Usuario inicia sesión después de cerrar sesión | usuario@example.com, Contraseña correcta | Inicio de sesión exitoso          | Normal    |
+| 31 | Usuario inicia sesión con contraseña larga | usuario@example.com, 128 caracteres       | Inicio de sesión exitoso           | Extremo    |
+| 32 | Usuario inicia sesión con correo muy largo | 320 caracteres, Contraseña correcta       | Inicio de sesión exitoso           | Extremo    |
+| 33 | Usuario inicia sesión con múltiples intentos | usuario@example.com, intentos repetidos   | Inicio de sesión exitoso           | Extremo    |
+| 34 | Intentar iniciar sesión con correo incorrecto | usuario@incorrecto.com, Contraseña correcta | Error: Usuario no registrado     | Error    |
+| 35 | Intentar iniciar sesión con contraseña incorrecta | usuario@example.com, Contraseña incorrecta | Error: Credenciales incorrectas | Error    |
+| 36 | Intentar iniciar sesión con usuario inactivo | usuario@example.com, Contraseña correcta  | Error: Usuario inactivo           | Error    |
 
-## Cambiar Contraseña
-
+### Cambiar Contraseña
 | #  | Caso de Prueba                                  | Entrada                                               | Resultado Esperado                   | Tipo   |
 |----|----------------------------------------------|------------------------------------------------------|-------------------------------------|--------|
 | 37 | Usuario cambia la contraseña con éxito       | usuario@example.com, contraseña_actual, nueva_contraseña | Contraseña cambiada correctamente  | Normal |
@@ -144,9 +142,7 @@ A continuación, se presentan los casos de prueba para cada funcionalidad, cubri
 | 44 | Intentar cambiar la contraseña sin proporcionar correo | "", contraseña_actual, nueva_contraseña | Error: Debe proporcionar un correo | Error  |
 | 45 | Intentar cambiar la contraseña de un usuario inactivo | usuario@example.com, contraseña_actual, nueva_contraseña | Error: Usuario inactivo           | Error  |
 
-
-## Crear Cuenta
-
+### Crear Cuenta
 | #  | Caso de Prueba                                | Entrada                               | Resultado Esperado                  | Tipo   |
 |----|----------------------------------------------|--------------------------------------|-------------------------------------|--------|
 | 46 | Usuario crea cuenta correctamente           | Datos válidos                        | Cuenta creada exitosamente         | Normal |
