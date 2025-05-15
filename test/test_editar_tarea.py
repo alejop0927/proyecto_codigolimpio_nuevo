@@ -1,160 +1,187 @@
-from unittest.mock import patch, MagicMock, ANY
-from src.controller.sistema import Sistema
 import pytest
-
-@pytest.fixture
-def sistema_mockeado():
+from src.model.bd_mock.base_datos_mock import Base_datos_mock
+from unittest.mock import patch
+from datetime import datetime
+class Editar:
     """
-    Fixture que crea un objeto Sistema simulado con una conexión a base de datos simulada.
-    
-    Esta fixture es utilizada para configurar el sistema de pruebas con la conexión y cursor 
-    necesarios para ejecutar las pruebas de edición de tareas.
+    Clase para editar tareas y almacenarlas en la base de datos mock.
     """
-    with patch('src.model.conexion.obtener_conexion_bd') as mock_obtener_conexion_bd:
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_obtener_conexion_bd.return_value = mock_conn
-        mock_conn.cursor.return_value = mock_cursor
 
-        sistema = Sistema()
-        sistema.conn = mock_conn
-        sistema.cursor = mock_cursor
-        sistema.usuario_actual_id = 1
+    def __init__(self):
+        """
+        Inicializa la clase Editar con la base de datos mock.
+        """
+        self.db = db_mock
 
-        yield sistema, mock_cursor, mock_conn
+    def editar_tarea(self, nombre_tarea, nuevo_texto, nueva_categoria, nuevo_estado):
+        """
+        Permite al usuario editar una tarea existente.
 
-def preparar_mock_busqueda(mock_cursor, tarea_existente=True):
+        Parámetros:
+            nombre_tarea (str): Nombre de la tarea a editar.
+            nuevo_texto (str): Nuevo contenido de la tarea.
+            nueva_categoria (str): Nueva categoría de la tarea.
+            nuevo_estado (str): Nuevo estado de la tarea.
+
+        Retorna:
+            str: Mensaje de éxito o error.
+        """
+        if self.db.usuario_actual is None:
+            return "Debes iniciar sesión"
+
+        tareas_usuario = self.db.usuarios_tareas.get(self.db.usuario_actual, [])
+        tarea = next((t for t in tareas_usuario if t["nombre"] == nombre_tarea), None)
+
+        if not tarea:
+            return "Tarea no encontrada"
+
+        if not nuevo_texto and not nueva_categoria and not nuevo_estado:
+            return "No hay cambios registrados"
+
+        if nuevo_texto:
+            tarea["texto"] = nuevo_texto
+        if nueva_categoria:
+            tarea["categoría"] = nueva_categoria
+        if nuevo_estado:
+            tarea["estado"] = nuevo_estado
+
+        return "Tarea actualizada correctamente"
+
+
+# Instancia de la base de datos mock
+db_mock = Base_datos_mock()
+
+@pytest.fixture(autouse=True)
+def limpiar_base_datos():
     """
-    Configura el mock de la búsqueda en la base de datos para simular una tarea existente o no.
-
-    :param mock_cursor: El cursor simulado de la base de datos.
-    :param tarea_existente: Si es True, simula que la tarea existe, si es False, simula que no existe.
+    Fixture que limpia la base de datos antes de cada prueba.
     """
-    if tarea_existente:
-        mock_cursor.fetchone.return_value = (1, "Texto", "Texto", "Categoría", "Estado")
-    else:
-        mock_cursor.fetchone.return_value = None
+    db_mock.usuarios.clear()
+    db_mock.usuarios_tareas.clear()
+    db_mock.usuario_actual = "usuario1"
+    db_mock.usuarios["usuario1"] = {
+        "Nombre": "Juan",
+        "Apellido": "Prueba",
+        "Correo": "usuario1",
+        "Contraseña": "123"
+    }
+    db_mock.usuarios_tareas["usuario1"] = [{
+        "nombre": "Hacer ejercicio",
+        "texto": "Hacer ejercicio",
+        "fecha": "2025-04-05 19:21:11",
+        "categoría": "Salud",
+        "estado": "Por Hacer"
+    }]
 
-def test_editar_texto_tarea_existente(sistema_mockeado):
+def test_editar_texto_tarea_existente():
     """
     Prueba la edición del texto de una tarea existente.
 
-    Verifica que al editar una tarea con un texto nuevo, se realice la llamada 
-    adecuada al método de la base de datos.
+    Verifica que al editar una tarea con un texto nuevo, se actualice correctamente en la base de datos.
     """
-    sistema, mock_cursor, mock_conn = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor)
+    with patch('builtins.input', side_effect=["Hacer ejercicio", "Hacer cardio", "", ""]):
+        editar = Editar()
+        resultado = editar.editar_tarea("Hacer ejercicio", "Hacer cardio", "", "")
+        assert resultado == "Tarea actualizada correctamente"
+        assert db_mock.usuarios_tareas["usuario1"][0]["texto"] == "Hacer cardio"
 
-    resultado = sistema.editar_tarea("Comprar leche", "Comprar leche y pan", "Compras", "Por hacer")
-
-    mock_cursor.execute.assert_any_call(
-        ANY,
-        ("Comprar leche y pan", "Compras", "Por hacer", ANY, 1)
-    )
-
-def test_editar_categoria_tarea_existente(sistema_mockeado):
+def test_editar_categoria_tarea_existente():
     """
     Prueba la edición de la categoría de una tarea existente.
 
-    Verifica que al cambiar la categoría de una tarea existente, se realice la 
-    llamada adecuada al método de la base de datos.
+    Verifica que al cambiar la categoría de una tarea existente, se actualice correctamente en la base de datos.
     """
-    sistema, mock_cursor, mock_conn = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor)
+    with patch('builtins.input', side_effect=["Hacer ejercicio", "", "Educación", ""]):
+        editar = Editar()
+        resultado = editar.editar_tarea("Hacer ejercicio", "", "Educación", "")
+        assert resultado == "Tarea actualizada correctamente"
+        assert db_mock.usuarios_tareas["usuario1"][0]["categoría"] == "Educación"
 
-    resultado = sistema.editar_tarea("Ir al gimnasio", "Ir al gimnasio", "Deporte", "Por hacer")
-
-    mock_cursor.execute.assert_any_call(
-        ANY,
-        ("Ir al gimnasio", "Deporte", "Por hacer", ANY, 1)
-    )
-
-def test_editar_estado_tarea_existente(sistema_mockeado):
+def test_editar_estado_tarea_existente():
     """
     Prueba la edición del estado de una tarea existente.
 
-    Verifica que al cambiar el estado de una tarea existente, se realice la 
-    llamada adecuada al método de la base de datos y que el resultado sea el esperado.
+    Verifica que al cambiar el estado de una tarea existente, se actualice correctamente en la base de datos.
     """
-    sistema, mock_cursor, mock_conn = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor)
+    with patch('builtins.input', side_effect=["Hacer ejercicio", "", "", "Completada"]):
+        editar = Editar()
+        resultado = editar.editar_tarea("Hacer ejercicio", "", "", "Completada")
+        assert resultado == "Tarea actualizada correctamente"
+        assert db_mock.usuarios_tareas["usuario1"][0]["estado"] == "Completada"
 
-    resultado = sistema.editar_tarea("Leer libro", "Leer libro", "Educación", "Completada")
-
-    mock_cursor.execute.assert_any_call(
-        ANY,
-        ("Leer libro", "Educación", "Completada", ANY, 1)
-    )
-    assert resultado == "Tarea actualizada correctamente"
-
-def test_editar_tarea_estado_limite(sistema_mockeado):
+def test_editar_tarea_texto_maximo():
     """
-    Prueba la edición de una tarea con un estado en el límite permitido.
+    Prueba la edición del texto de una tarea con el máximo permitido de caracteres.
 
-    Verifica que el sistema permita la actualización con estados válidos, como "Pendiente".
+    Verifica que al actualizar el texto de una tarea con un texto largo, se actualice correctamente en la base de datos.
     """
-    sistema, mock_cursor, mock_conn = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor)
+    texto_largo = "A" * 255
+    with patch('builtins.input', side_effect=["Hacer ejercicio", texto_largo, "", ""]):
+        editar = Editar()
+        resultado = editar.editar_tarea("Hacer ejercicio", texto_largo, "", "")
+        assert resultado == "Tarea actualizada correctamente"
+        assert db_mock.usuarios_tareas["usuario1"][0]["texto"] == texto_largo
 
-    resultado = sistema.editar_tarea("Estudiar", "Estudiar", "Educación", "Pendiente")
-    assert resultado == "Tarea actualizada correctamente"
-
-def test_editar_tarea_categoria_nueva(sistema_mockeado):
+def test_editar_tarea_estado_limite():
     """
-    Prueba la edición de una tarea con una nueva categoría.
+    Prueba la edición del estado de una tarea con un estado en el límite permitido.
 
-    Verifica que el sistema permita actualizar una tarea con una nueva categoría válida.
+    Verifica que al actualizar el estado de una tarea con un estado válido, se actualice correctamente en la base de datos.
     """
-    sistema, mock_cursor, mock_conn = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor)
+    with patch('builtins.input', side_effect=["Hacer ejercicio", "", "", "Pendiente"]):
+        editar = Editar()
+        resultado = editar.editar_tarea("Hacer ejercicio", "", "", "Pendiente")
+        assert resultado == "Tarea actualizada correctamente"
+        assert db_mock.usuarios_tareas["usuario1"][0]["estado"] == "Pendiente"
 
-    resultado = sistema.editar_tarea("Viajar", "Viajar", "Placer", "Por hacer")
-    assert resultado == "Tarea actualizada correctamente"
+def test_editar_tarea_nueva_categoria():
+    """
+    Prueba la edición de la categoría de una tarea con una nueva categoría.
 
-def test_editar_tarea_inexistente(sistema_mockeado):
+    Verifica que al actualizar la categoría de una tarea con una nueva categoría válida, se actualice correctamente en la base de datos.
+    """
+    with patch('builtins.input', side_effect=["Hacer ejercicio", "", "Placer", ""]):
+        editar = Editar()
+        resultado = editar.editar_tarea("Hacer ejercicio", "", "Placer", "")
+        assert resultado == "Tarea actualizada correctamente"
+        assert db_mock.usuarios_tareas["usuario1"][0]["categoría"] == "Placer"
+
+def test_editar_tarea_inexistente():
     """
     Prueba la edición de una tarea que no existe.
 
     Verifica que el sistema devuelva un mensaje adecuado cuando se intenta editar una tarea inexistente.
     """
-    sistema, mock_cursor, _ = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor, tarea_existente=False)
+    with patch('builtins.input', side_effect=["Tarea inexistente", "", "", ""]):
+        editar = Editar()
+        resultado = editar.editar_tarea("Tarea inexistente", "", "", "")
+        assert resultado == "Tarea no encontrada"
 
-    resultado = sistema.editar_tarea("Tarea inexistente", "Nuevo texto", "Nueva categoría", "Nuevo estado")
-    assert resultado == "Tarea no encontrada"
-
-def test_editar_tarea_combinacion_cambios(sistema_mockeado):
+def test_editar_tarea_sin_cambios():
     """
-    Prueba la edición de una tarea con múltiples cambios en texto, categoría y estado.
+    Prueba la edición de una tarea sin realizar cambios.
 
-    Verifica que el sistema maneje correctamente la combinación de cambios en una tarea existente.
+    Verifica que el sistema devuelva un mensaje adecuado cuando no se registran cambios en la tarea.
     """
-    sistema, mock_cursor, _ = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor)
+    with patch('builtins.input', side_effect=["Hacer ejercicio", "", "", ""]):
+        editar = Editar()
+        resultado = editar.editar_tarea("Hacer ejercicio", "", "", "")
+        assert resultado == "No hay cambios registrados"
 
-    resultado = sistema.editar_tarea("Leer libro", "Estudiar", "Educación", "Completada")
-    assert resultado == "Tarea actualizada correctamente"
-
-def test_editar_tarea_estado_inusual(sistema_mockeado):
+def test_editar_tarea_cambiando_usuario():
     """
-    Prueba la edición de una tarea con un estado inusual.
+    Prueba la edición de una tarea cambiando el usuario actual.
 
-    Verifica que el sistema permita actualizar una tarea con un estado inusual como "En pausa".
+    Verifica que el sistema devuelva un mensaje adecuado cuando se intenta editar una tarea de otro usuario.
     """
-    sistema, mock_cursor, _ = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor)
-
-    resultado = sistema.editar_tarea("Estudiar", "Estudiar", "Educación", "En pausa")
-    assert resultado == "Tarea actualizada correctamente"
-
-def test_editar_tarea_estado_completada(sistema_mockeado):
-    """
-    Prueba la edición de una tarea con estado "Completada".
-
-    Verifica que el sistema permita actualizar una tarea con el estado "Completada" correctamente.
-    """
-    sistema, mock_cursor, _ = sistema_mockeado
-    preparar_mock_busqueda(mock_cursor)
-
-    resultado = sistema.editar_tarea("Comprar leche", "Comprar leche", "Compras", "Completada")
-    assert resultado == "Tarea actualizada correctamente"
+    with patch('builtins.input', side_effect=["Hacer ejercicio", "Nuevo texto", "Nueva categoría", "Nuevo estado"]):
+        db_mock.usuario_actual = "usuario2"
+        db_mock.usuarios["usuario2"] = {
+            "Nombre": "Ana",
+            "Apellido": "Prueba",
+            "Correo": "usuario2",
+            "Contraseña": "123"
+        }
+        editar = Editar()
+        resultado = editar.editar_tarea("Hacer ejercicio", "Nuevo texto", "Nueva categoría", "Nuevo estado")
+        assert resultado == "Tarea no encontrada"

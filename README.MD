@@ -7,6 +7,12 @@ Para ejecutar el proyecto y ver las interfaces debes de estar en la carpeta inic
 ```sh
 python main.py
 ```
+Para ejecutar el proyecto y ver la terminal con el menu debes de estar en la carpeta inicial de proyecto y correr el siguiente comando
+
+```sh
+python start_menu_consola.py 
+```
+
 
 Esto verificará que corren correctamente las 54 pruebas.
 
@@ -27,7 +33,7 @@ Ubícate en la carpeta del proyecto.
 desde alli vas a ejecutar el siguiente comando en la terminal:
 
 ```sh
-python -m src.view.menu
+python start_menu_consola.py 
 ```
 
 

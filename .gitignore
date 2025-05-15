@@ -4,6 +4,7 @@
 # Permitir archivos específicos
 !.gitignore
 !main.py
+!start_menu_consola.py
 !README.MD
 !LICIENSE.TXT
 !myapp-0.1-arm64-v8a_armeabi-v7a-debug.apk

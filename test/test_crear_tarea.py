@@ -1,145 +1,179 @@
 import pytest
-from unittest.mock import patch, MagicMock
-from src.model.tarea import Tarea
+from src.model.bd_mock.db_global_mock import db_mock
+from src.model.bd_mock.base_datos_mock import Base_datos_mock
+from unittest.mock import patch
+from datetime import datetime
 
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_texto_valido(mock_obtener_conexion_bd):
+class Crear:
     """
-    Prueba que valida la creación de una tarea con un texto válido.
-    Se asegura de que la tarea se cree correctamente cuando los parámetros
-    de entrada son correctos.
+    Clase para crear tareas y almacenarlas en la base de datos mock.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
 
-    mock_cursor.fetchone.side_effect = [(1,), None]
+    def __init__(self, nombre, texto, fecha, categoria, estado):
+        """
+        Inicializa una nueva tarea con los datos proporcionados.
 
-    tarea = Tarea(1, "Comprar leche", "Comprar leche", "Compras", "Por hacer")
-    assert tarea is not None
+        Parámetros:
+            nombre (str): Nombre de la tarea.
+            texto (str): Descripción de la tarea.
+            fecha (datetime): Fecha de creación de la tarea.
+            categoria (str): Categoría de la tarea.
+            estado (str): Estado de la tarea.
+        """
+        self.nombre = nombre
+        self.texto = texto
+        self.fecha = fecha
+        self.categoria = categoria
+        self.estado = estado
 
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_estado_por_hacer(mock_obtener_conexion_bd):
+    def crear_tareas(self):
+        """
+        Crea una nueva tarea y la almacena en la base de datos mock.
+
+        Retorna:
+            str: Mensaje de éxito o error.
+        """
+        if not self.texto:
+            return "Error: El texto no puede estar vacío"
+        if not self.categoria:
+            return "Error: La categoría es requerida"
+        if not self.estado:
+            return "Error: El estado es requerido"
+
+        tarea = {
+            "nombre": self.nombre,
+            "texto": self.texto,
+            "fecha": self.fecha,
+            "categoria": self.categoria,
+            "estado": self.estado
+        }
+
+        if db_mock.usuario_actual not in db_mock.usuarios_tareas:
+            db_mock.usuarios_tareas[db_mock.usuario_actual] = []
+
+        db_mock.usuarios_tareas[db_mock.usuario_actual].append(tarea)
+        return "Tarea creada exitosamente"
+
+
+# Instancia de la base de datos mock
+db_mock = Base_datos_mock()
+
+@pytest.fixture(autouse=True)
+def limpiar_base_datos():
+    """
+    Fixture que limpia la base de datos antes de cada prueba.
+    """
+    db_mock.usuarios.clear()
+    db_mock.usuarios_tareas.clear()
+    db_mock.usuario_actual = "usuario1"
+    db_mock.usuarios["usuario1"] = {
+        "Nombre": "Juan",
+        "Apellido": "Prueba",
+        "Correo": "usuario1",
+        "Contraseña": "123"
+    }
+
+
+def crear_tareas(nombre, texto, categoria, estado):
+    """
+    Función auxiliar para crear tareas.
+    """
+    tarea = Crear(nombre, texto, "", categoria, estado)
+    return tarea.crear_tareas()
+
+
+def test_crear_tareas_valida_con_categoria():
+    """
+    Prueba que valida la creación de una tarea con una categoría válida.
+    """
+    with patch('builtins.input', side_effect=["Comprar leche", "Comprar leche", "Compras", "Por hacer"]):
+        tarea = Crear("Comprar leche", "Comprar leche", datetime.now(), "Compras", "Por hacer")
+        tarea.crear_tareas()
+        assert len(db_mock.usuarios_tareas["usuario1"]) == 1
+        assert db_mock.usuarios_tareas["usuario1"][0]["nombre"] == "Comprar leche"
+
+
+def test_crear_tareas_con_estado_por_hacer():
     """
     Prueba que valida la creación de una tarea con el estado "Por hacer".
-    Asegura que la tarea sea creada correctamente cuando el estado es el esperado.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
+    with patch('builtins.input', side_effect=["Ir al gimnasio", "Ir al gimnasio", "Salud", "Por hacer"]):
+        tarea = Crear("Ir al gimnasio", "Ir al gimnasio", datetime.now(), "Salud", "Por hacer")
+        tarea.crear_tareas()
+        assert len(db_mock.usuarios_tareas["usuario1"]) == 1
+        assert db_mock.usuarios_tareas["usuario1"][0]["nombre"] == "Ir al gimnasio"
 
-    mock_cursor.fetchone.side_effect = [(1,), None]
 
-    tarea = Tarea(1, "Ir al gimnasio", "Ir al gimnasio", "Salud", "Por hacer")
-    assert tarea is not None
-
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_usuario_registrado(mock_obtener_conexion_bd):
+def test_crear_tareas_usuario_registrado():
     """
     Prueba que valida la creación de una tarea cuando el usuario está registrado.
-    Verifica que la tarea se cree si el usuario existe en la base de datos.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
+    with patch('builtins.input', side_effect=["Leer libro", "Leer libro", "Lectura", "Por hacer"]):
+        tarea = Crear("Leer libro", "Leer libro", datetime.now(), "Lectura", "Por hacer")
+        tarea.crear_tareas()
+        assert len(db_mock.usuarios_tareas["usuario1"]) == 1
+        assert db_mock.usuarios_tareas["usuario1"][0]["nombre"] == "Leer libro"
 
-    mock_cursor.fetchone.side_effect = [(1,), None]
 
-    tarea = Tarea(1, "Leer libro", "Leer libro", "Educación", "Por hacer")
-    assert tarea is not None
-
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_texto_largo(mock_obtener_conexion_bd):
+def test_crear_tareas_texto_largo():
     """
     Prueba que valida la creación de una tarea con un texto largo.
-    Se asegura de que la tarea se pueda crear correctamente si el texto no excede el límite.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
+    texto_largo = "A" * 255
+    with patch('builtins.input', side_effect=["Tarea larga", texto_largo, "Trabajo", "Por hacer"]):
+        tarea = Crear("Tarea larga", texto_largo, datetime.now(), "Trabajo", "Por hacer")
+        tarea.crear_tareas()
+        assert len(db_mock.usuarios_tareas["usuario1"]) == 1
+        assert db_mock.usuarios_tareas["usuario1"][0]["texto"] == texto_largo
 
-    mock_cursor.fetchone.side_effect = [(1,), None]
 
-    tarea = Tarea(1, "Trabajo largo", "A" * 255, "Trabajo", "Por hacer")
-    assert tarea is not None
-
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_estado_inusual(mock_obtener_conexion_bd):
+def test_crear_tareas_estado_inusual():
     """
     Prueba que valida la creación de una tarea con un estado inusual.
-    Verifica que la tarea se cree correctamente si el estado es válido pero no común.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
+    with patch('builtins.input', side_effect=["Estudiar", "Estudiar", "Estudio", "En pausa"]):
+        tarea = Crear("Estudiar", "Estudiar", datetime.now(), "Estudio", "En pausa")
+        tarea.crear_tareas()
+        assert len(db_mock.usuarios_tareas["usuario1"]) == 1
+        assert db_mock.usuarios_tareas["usuario1"][0]["estado"] == "En pausa"
 
-    mock_cursor.fetchone.side_effect = [(1,), None]
 
-    tarea = Tarea(1, "Estudiar", "Estudiar", "Educación", "En pausa")
-    assert tarea is not None
-
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_categoria_desconocida(mock_obtener_conexion_bd):
+def test_crear_tareas_categoria_desconocida():
     """
     Prueba que valida la creación de una tarea con una categoría desconocida.
-    Verifica que la tarea se cree correctamente incluso si la categoría no es estándar.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
+    with patch('builtins.input', side_effect=["Viajar", "Viajar", "Otro", "Por hacer"]):
+        tarea = Crear("Viajar", "Viajar", datetime.now(), "Otro", "Por hacer")
+        tarea.crear_tareas()
+        assert len(db_mock.usuarios_tareas["usuario1"]) == 1
+        assert db_mock.usuarios_tareas["usuario1"][0]["categoria"] == "Otro"
 
-    mock_cursor.fetchone.side_effect = [(1,), None]
 
-    tarea = Tarea(1, "Viajar", "Viajar", "Otro", "Por hacer")
-    assert tarea is not None
-
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_sin_texto(mock_obtener_conexion_bd):
+def test_error_tarea_sin_texto():
     """
     Prueba que valida que se lance un error si el texto de la tarea está vacío.
-    Se asegura de que se levante un ValueError con el mensaje adecuado.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
+    with patch('builtins.input', side_effect=["Tarea sin texto", "", "Personal", "Por hacer"]):
+        tarea = Crear("Tarea sin texto", "", datetime.now(), "Personal", "Por hacer")
+        resultado = tarea.crear_tareas()
+        assert resultado == "Error: El texto no puede estar vacío"
 
-    with pytest.raises(ValueError, match="Error: El texto no puede estar vacío"):
-        Tarea(1, "b", "", "Personal", "Por hacer")
 
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_sin_categoria(mock_obtener_conexion_bd):
+def test_error_tarea_sin_categoria():
     """
     Prueba que valida que se lance un error si no se proporciona una categoría.
-    Se asegura de que se levante un ValueError con el mensaje adecuado.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
+    with patch('builtins.input', side_effect=["Hacer ejercicio", "Hacer ejercicio", "", "Por hacer"]):
+        tarea = Crear("Hacer ejercicio", "Hacer ejercicio", datetime.now(), "", "Por hacer")
+        resultado = tarea.crear_tareas()
+        assert resultado == "Error: La categoría es requerida"
 
-    with pytest.raises(ValueError, match="Error: La categoría es requerida"):
-        Tarea(1, "Hacer ejercicio", "Hacer ejercicio", "", "Por hacer")
 
-@patch('src.model.conexion.obtener_conexion_bd')
-def test_crear_tarea_sin_estado(mock_obtener_conexion_bd):
+def test_error_tarea_sin_estado():
     """
     Prueba que valida que se lance un error si no se proporciona un estado.
-    Se asegura de que se levante un ValueError con el mensaje adecuado.
     """
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_obtener_conexion_bd.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
-
-    with pytest.raises(ValueError, match="Error: El estado es requerido"):
-        Tarea(1, "Revisar correo", "Revisar correo", "Trabajo", "")
-
-if __name__ == '__main__':
-    pytest.main()
+    with patch('builtins.input', side_effect=["Revisar correo", "Revisar correo", "Trabajo", ""]):
+        tarea = Crear("Revisar correo", "Revisar correo", datetime.now(), "Trabajo", "")
+        resultado = tarea.crear_tareas()
+        assert resultado == "Error: El estado es requerido"

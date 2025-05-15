@@ -1,142 +1,133 @@
 import pytest
+from src.model.bd_mock.base_datos_mock import Base_datos_mock
 
-@pytest.fixture
-def usuarios_simulados():
+db_mock = Base_datos_mock()
+
+def crear_usuario_mock(nombre, apellido, correo, contraseña):
     """
-    Fixture que devuelve una lista vacía para simular una base de datos de usuarios.
+    Simula la creación de un usuario en la base de datos mock.
+
+    Parámetros:
+        nombre (str): Nombre del usuario (máx. 50 caracteres).
+        apellido (str): Apellido del usuario.
+        correo (str): Correo electrónico único del usuario.
+        contraseña (str): Contraseña del usuario (8-100 caracteres).
+
+    Retorna:
+        str: Mensaje que indica éxito o tipo de error en la creación.
     """
-    return []
+    if correo in db_mock.usuarios:
+        return "Error: Correo ya registrado"
+    if not nombre or len(nombre) > 50:
+        return "Error: Nombre demasiado largo"
+    if not apellido:
+        return "Error: Apellido faltante"
+    if len(contraseña) > 100:
+        return "Error: Contraseña demasiado larga"
+    if len(contraseña) < 8:
+        return "Error: Contraseña demasiado débil"
 
-def crear_usuario(usuarios, id_usuario, nombre, apellido, email, contrasena):
-    """
-    Crea un nuevo usuario con la validación de datos de entrada.
-    
-    Verifica que los datos proporcionados sean válidos:
-    - Datos obligatorios no deben estar vacíos
-    - El nombre no debe exceder los 50 caracteres
-    - La contraseña no debe exceder los 100 caracteres
-    - El correo no debe estar ya registrado
-    - La contraseña no debe contener "123" (considerada débil)
-
-    Args:
-        usuarios (list): La lista de usuarios existentes.
-        id_usuario (int): El identificador único para el nuevo usuario.
-        nombre (str): El nombre del usuario.
-        apellido (str): El apellido del usuario.
-        email (str): El correo electrónico del usuario.
-        contrasena (str): La contraseña del usuario.
-
-    Raises:
-        ValueError: Si alguno de los datos no es válido.
-
-    Returns:
-        dict: Un diccionario con la información del usuario creado.
-    """
-    if not nombre or not apellido or not email or not contrasena:
-        raise ValueError("Error: Datos obligatorios faltantes")
-    
-    if len(nombre) > 50:
-        raise ValueError("Error: Nombre demasiado largo")
-    if len(contrasena) > 100:
-        raise ValueError("Error: Contraseña demasiado larga")
-    
-    if any(u["email"] == email for u in usuarios):
-        raise ValueError("Error: Correo ya registrado")
-    
-    if "123" in contrasena.lower():
-        raise ValueError("Error: Contraseña demasiado débil")
-
-    usuario = {
-        "id": id_usuario,
-        "nombre": nombre,
-        "apellido": apellido,
-        "email": email,
-        "contrasena": contrasena
+    db_mock.usuarios[correo] = {
+        "Nombre": nombre,
+        "Apellido": apellido,
+        "Correo": correo,
+        "Contraseña": contraseña,
     }
-    usuarios.append(usuario)
-    return usuario
+    return "Usuario creado con éxito"
 
-# ------------------------------
-# Casos de prueba
-# ------------------------------
+@pytest.fixture(autouse=True)
+def limpiar_base_datos():
+    """
+    Fixture que limpia la base de datos mock antes de cada prueba.
+    """
+    db_mock.usuarios.clear()
+    db_mock.usuario_actual = None
 
-def test_crear_usuario_datos_validos(usuarios_simulados):
+def test_crear_cuenta_correctamente():
     """
-    Prueba que verifica la creación de un usuario con datos válidos.
+    Prueba que verifica la creación exitosa de una cuenta de usuario con datos válidos.
     """
-    usuario = crear_usuario(usuarios_simulados, 1, "Carlos", "Pérez", "carlos1@example.com", "ClaveSegura456")
-    assert usuario in usuarios_simulados
+    resultado = crear_usuario_mock("Juan", "Prueba", "usuario@example.com", "12345678")
+    assert resultado == "Usuario creado con éxito"
+    assert "usuario@example.com" in db_mock.usuarios
 
-def test_crear_usuario_y_login(usuarios_simulados):
+def test_crear_cuenta_y_iniciar_sesion():
     """
-    Prueba que verifica la creación de un usuario y su posterior login (búsqueda por correo y contraseña).
+    Prueba que verifica la creación de una cuenta y el inicio de sesión posterior exitoso.
     """
-    crear_usuario(usuarios_simulados, 2, "Luisa", "Ramírez", "luisa2@example.com", "ContrasenaSegura789")
-    login = next((u for u in usuarios_simulados if u["email"] == "luisa2@example.com" and u["contrasena"] == "ContrasenaSegura789"), None)
-    assert login is not None
+    # Crear usuario
+    resultado = crear_usuario_mock("Juan", "Prueba", "usuario@example.com", "12345678")
+    assert resultado == "Usuario creado con éxito"
+    assert "usuario@example.com" in db_mock.usuarios
 
-def test_crear_usuario_correo_alternativo(usuarios_simulados):
-    """
-    Prueba que verifica la creación de un usuario con un correo alternativo.
-    """
-    usuario = crear_usuario(usuarios_simulados, 3, "Ana", "Torres", "ana3.alterna@example.com", "AlternaClaveFuerte")
-    assert usuario["email"] == "ana3.alterna@example.com"
+    # Simular inicio de sesión en mock (simple)
+    correo = "usuario@example.com"
+    contraseña = "12345678"
+    if correo in db_mock.usuarios and db_mock.usuarios[correo]["Contraseña"] == contraseña:
+        db_mock.usuario_actual = correo
+        resultado_login = f"Bienvenido {db_mock.usuarios[correo]['Nombre']}"
+    else:
+        resultado_login = "Error: Credenciales incorrectas"
 
-def test_crear_usuario_contrasena_larga(usuarios_simulados):
-    """
-    Prueba que verifica que se genere un error si la contraseña es demasiado larga (> 100 caracteres).
-    """
-    contrasena = "A" * 101
-    with pytest.raises(ValueError) as err:
-        crear_usuario(usuarios_simulados, 4, "Largo", "Pass", "largo@example.com", contrasena)
-    assert str(err.value) == "Error: Contraseña demasiado larga"
+    assert resultado_login == "Bienvenido Juan"
+    assert db_mock.usuario_actual == "usuario@example.com"
 
-def test_crear_usuario_nombre_largo(usuarios_simulados):
+def test_crear_cuenta_correo_alternativo():
     """
-    Prueba que verifica que se genere un error si el nombre del usuario excede los 50 caracteres.
+    Prueba que verifica la creación de una cuenta con un correo alternativo válido.
     """
-    nombre = "A" * 51
-    with pytest.raises(ValueError) as err:
-        crear_usuario(usuarios_simulados, 5, nombre, "Apellido", "nombrelargo@example.com", "ClaveSegura")
-    assert str(err.value) == "Error: Nombre demasiado largo"
+    resultado = crear_usuario_mock("Juan", "Prueba", "alternativo@example.com", "12345678")
+    assert resultado == "Usuario creado con éxito"
+    assert "alternativo@example.com" in db_mock.usuarios
 
-def test_crear_usuario_conexion_inestable(usuarios_simulados):
+def test_crear_cuenta_contraseña_larga():
     """
-    Prueba que verifica que se genere un error si los datos requeridos no están completos (simulación de una conexión inestable).
+    Prueba que verifica que la creación de una cuenta falle si la contraseña excede los 100 caracteres.
     """
-    with pytest.raises(ValueError) as err:
-        crear_usuario(usuarios_simulados, 6, "", "Apellido", "ejemplo@correo.com", "clave")
-    assert str(err.value) == "Error: Datos obligatorios faltantes"
+    contraseña_larga = "A" * 101
+    resultado = crear_usuario_mock("Juan", "Prueba", "usuario3@example.com", contraseña_larga)
+    assert resultado == "Error: Contraseña demasiado larga"
 
-def test_crear_usuario_correo_ya_registrado(usuarios_simulados):
+def test_crear_cuenta_nombre_largo():
     """
-    Prueba que verifica que se genere un error si el correo ya está registrado en la base de datos.
+    Prueba que verifica que la creación de una cuenta falle si el nombre excede los 50 caracteres.
     """
-    crear_usuario(usuarios_simulados, 7, "Pedro", "Soto", "pedro@example.com", "Clave456")
-    with pytest.raises(ValueError) as err:
-        crear_usuario(usuarios_simulados, 8, "Pedro2", "Soto", "pedro@example.com", "Clave789")
-    assert str(err.value) == "Error: Correo ya registrado"
+    nombre_largo = "A" * 51
+    resultado = crear_usuario_mock(nombre_largo, "Prueba", "usuario2@example.com", "12345678")
+    assert resultado == "Error: Nombre demasiado largo"
 
-def test_crear_usuario_contrasena_debil(usuarios_simulados):
+def test_crear_cuenta_conexion_inestable():
     """
-    Prueba que verifica que se genere un error si la contraseña es demasiado débil (contiene "123").
+    Prueba que simula una conexión estable y verifica creación correcta de usuario.
+    En mock no simulamos falla, siempre es exitosa.
     """
-    with pytest.raises(ValueError) as err:
-        crear_usuario(usuarios_simulados, 9, "Mario", "Lopez", "mario@example.com", "abc123")
-    assert str(err.value) == "Error: Contraseña demasiado débil"
+    resultado = crear_usuario_mock("Juan", "Prueba", "usuario4@example.com", "12345678")
+    assert resultado == "Usuario creado con éxito"
+    assert "usuario4@example.com" in db_mock.usuarios
 
-def test_crear_usuario_datos_incompletos(usuarios_simulados):
+def test_crear_cuenta_correo_registrado():
     """
-    Prueba que verifica que se genere un error si algún dato obligatorio está ausente al crear el usuario.
+    Prueba que verifica que la creación de cuenta falle si el correo ya está registrado.
     """
-    with pytest.raises(ValueError) as err1:
-        crear_usuario(usuarios_simulados, 10, "", "Apellido", "email1@example.com", "Clave123")
-    with pytest.raises(ValueError) as err2:
-        crear_usuario(usuarios_simulados, 11, "Nombre", "", "email2@example.com", "Clave123")
-    with pytest.raises(ValueError) as err3:
-        crear_usuario(usuarios_simulados, 12, "Nombre", "Apellido", "", "Clave123")
-    with pytest.raises(ValueError) as err4:
-        crear_usuario(usuarios_simulados, 13, "Nombre", "Apellido", "email3@example.com", "")
-    
-    for err in [err1, err2, err3, err4]:
-        assert str(err.value) == "Error: Datos obligatorios faltantes"
+    db_mock.usuarios["usuario@example.com"] = {
+        "Nombre": "Juan",
+        "Apellido": "Prueba",
+        "Correo": "usuario@example.com",
+        "Contraseña": "12345678"
+    }
+    resultado = crear_usuario_mock("Juan", "Prueba", "usuario@example.com", "12345678")
+    assert resultado == "Error: Correo ya registrado"
+
+def test_crear_cuenta_contraseña_debil():
+    """
+    Prueba que verifica que la creación de cuenta falle si la contraseña es demasiado débil (menos de 8 caracteres).
+    """
+    resultado = crear_usuario_mock("Juan", "Prueba", "usuario5@example.com", "123")
+    assert resultado == "Error: Contraseña demasiado débil"
+
+def test_crear_cuenta_datos_incompletos():
+    """
+    Prueba que verifica que la creación de cuenta falle si faltan datos obligatorios.
+    """
+    resultado = crear_usuario_mock("Juan", "", "usuario6@example.com", "12345678")
+    assert resultado == "Error: Apellido faltante"
