@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Eliminar Tarea</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Eliminar Tarea</h1>
+
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" class="form-change-password">
+            <div class="form-group">
+                <input type="text" name="nombre_tarea" placeholder="Nombre de la Tarea a Eliminar" required />
+            </div>
+            <button type="submit" class="btn btn-danger">Eliminar</button>
+        </form>
+    </div>
+</body>
+</html>

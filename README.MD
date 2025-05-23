@@ -1,52 +1,53 @@
 ## PROYECTO de Aula de Código Limpio
-## Nota importante
+# Descripción
+Este proyecto consiste en una aplicación para la gestión de tareas personales y profesionales, con funcionalidades para crear, editar, eliminar tareas y gestionar usuarios mediante registro, inicio de sesión y cambio de contraseña.
+# Requisitos Previos
 
-### Prueba de interfaces
-Para ejecutar el proyecto y ver las interfaces debes de estar en la carpeta inicial de proyecto y correr el siguiente comando
+* Flask instalado (para la parte web)
+* tener instalado KiVY
+* Tener la Base de Datos  que se encuentra en:
+ 
+```sh
+PS C:\Users\apena\proyecto_codigolimpio_desde_cero\src\model> 
+```
+se llama:
+```sh
+Base De Datos 
+```
+Instala Flask con el siguiente comando:
+```sh
+pip install flask
+```
+# Ejecutar la aplicación web
+Desde la carpeta raíz del proyecto, ejecuta:
+```sh
+python app.py
+```
+# Ejecutar interfaz gráfica
+Para ejecutar la interfaz gráfica, asegúrate de estar en la carpeta raíz y ejecuta:
 
 ```sh
 python main.py
 ```
-Para ejecutar el proyecto y ver la terminal con el menu debes de estar en la carpeta inicial de proyecto y correr el siguiente comando
+
+# Ejecutar menú en consola
+Para usar la versión de menú en consola, desde la carpeta raíz ejecuta:
 
 ```sh
-python start_menu_consola.py 
+python start_menu_consola.py
 ```
 
-
-Esto verificará que corren correctamente las 54 pruebas.
-
-### Pruebas
-Para ejecutar las pruebas, debes estar en la carpeta del proyecto y ejecutar el siguiente comando:
+# Pruebas Unitarias:
+Para ejecutar las pruebas automáticas (54 pruebas en total), ejecuta:
 
 ```sh
-pytest test
+pytest test 
 ```
-
-Esto verificará que corren correctamente las 54 pruebas.
-
-
-
-# Pasos para ejecutar el menú del proyecto:
-Ubícate en la carpeta del proyecto.
-
-desde alli vas a ejecutar el siguiente comando en la terminal:
-
-```sh
-python start_menu_consola.py 
-```
-
-
-
-Si todo está configurado correctamente, el programa se ejecutará sin problemas. 🚀
-
-## Nota:
-Para este proyecto, inicialmente se requiere la implementación de pruebas unitarias que evalúen las diferentes clases vacías. Posteriormente, se implementarán las funcionalidades de la aplicación. A continuación, se presentan los requisitos del sistema.
 
 
 
 ## Objetivo del Proyecto:
- El objetivo de este proyecto es desarrollar una aplicación para la gestión de tareas personales y profesionales.
+ Desarrollar una aplicación para la gestión de tareas personales y profesionales, permitiendo a los usuarios crear, modificar y eliminar tareas, además de manejar cuentas y sesiones de usuario.
 
 ## Funcionalidades:
 
@@ -62,7 +63,7 @@ Para este proyecto, inicialmente se requiere la implementación de pruebas unita
 
 6. Cambiar contraseña: Permitir a los usuarios cambiar su contraseña cuando lo deseen.
 
-## Datos de una tarea:
+## Modelo de Datos de una Tarea:
 
 Una tarea debe contener los siguientes datos:
 

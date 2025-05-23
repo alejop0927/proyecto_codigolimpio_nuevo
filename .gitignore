@@ -5,6 +5,7 @@
 !.gitignore
 !main.py
 !start_menu_consola.py
+!app.py
 !README.MD
 !LICIENSE.TXT
 !myapp-0.1-arm64-v8a_armeabi-v7a-debug.apk
@@ -14,3 +15,5 @@
 !src/**
 !test/
 !test/**
+!flask_app/
+!flask_app/**

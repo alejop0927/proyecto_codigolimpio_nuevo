@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Editar Tarea</title>
+   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Editar Tarea</h1>
+
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" class="form-change-password">
+            <div class="form-group">
+                <input type="text" name="nombre_tarea" placeholder="Nombre de la Tarea a Editar" required />
+            </div>
+            <div class="form-group">
+                <textarea name="nuevo_texto_tarea" placeholder="Nuevo Texto de la Tarea" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <input type="text" name="nueva_categoria" placeholder="Nueva Categoría" />
+            </div>
+            <div class="form-group">
+                <input type="text" name="nuevo_estado" placeholder="Nuevo Estado" />
+            </div>
+            <button type="submit" class="btn btn-primary">Editar</button>
+        </form>
+    </div>
+</body>
+</html>

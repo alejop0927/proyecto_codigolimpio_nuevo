@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Tus Tareas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Tareas del Usuario</h1>
+
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% elif tareas and tareas|length > 0 %}
+            <ul class="task-list">
+                {% for tarea in tareas %}
+                    <li class="task-item">
+                        <strong>Nombre:</strong> {{ tarea['nombre'] }} <br>
+                        <strong>Descripción:</strong> {{ tarea['descripcion'] or tarea['texto'] }} <br>
+                        <strong>Categoría:</strong> {{ tarea['categoria'] }} <br>
+                        <strong>Estado:</strong> {{ tarea['estado'] }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No tienes tareas registradas.</p>
+        {% endif %}
+
+        <a href="{{ url_for('dashboard.dashboard_view') }}" class="btn btn-link">Volver al Dashboard</a>
+    </div>
+</body>
+</html>
